@@ -10,12 +10,13 @@ import matplotlib
 matplotlib.use('agg')
 import cv2
 
-# BayesianFilter
-from kon import BayesianFilter
 from .config import config_scorelist, config_account, config_system
 from .response import conditionalCheckIntent, simpleResponse, cardResponse
-from .utils import csvWrite, _request_data
+from .utils import dbWrite, _request_data
 
+# prediction
+from models.preProcess import PreProcess
+from models.bayesianFilter import BayesianFilter
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
@@ -31,7 +32,8 @@ pipe_time = time.time()
 
 # bayesianFilter
 para = True
-bf = BayesianFilter(para=para)
+preProcessing = PreProcess(para=para)
+bf = BayesianFilter(para=para, preProcessing=preProcessing)
 
 # dnn model parameter 열기
 model = tf.keras.models.load_model('intent.h5')
@@ -110,14 +112,14 @@ def index():
         elif 'http' in message['msg'] and ('.mp4' in message['msg'] or '.mpg' in message['msg'] or '.avi' in message['msg']):
             response['template']['outputs'] = cardResponse(title='동영상')
         else:
-            spacetext, malist, pre, scorelist, words = bf.predict(message['msg'])
+            spacetext, corpus, pre, bayScore, words = bf.predict(message['msg'])
             current_app.logger.info('%s - %s' %('words', words))
 
             deepScore = deepPrediction(words)
             current_app.logger.info('%s - %s' %('deep predcition', str(deepScore)))
             # deeplearning 및 bayesian 결과 비교
             try:
-                csvWrite(message['msg'], spacetext, malist, words, deepScore, scorelist)
+                dbWrite(message['msg'], spacetext, corpus, words, deepScore, bayScore)
             except:
                 pass
 
@@ -128,7 +130,7 @@ def index():
                     return '', 204
                 response['template']['outputs'] = text
             else:
-                current_app.logger.info('%s - %s' %('bayesian', scorelist))
+                current_app.logger.info('%s - %s' %('bayesian', bayScore))
                 if bf.category_dict[pre] > 5:
                     intent = deepScore[0][0]
                     simple, text = simpleResponse(intent=intent)

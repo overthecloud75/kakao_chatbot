@@ -1,0 +1,88 @@
+import math, sys
+import json
+
+class BayesianFilter:
+    def __init__(self, para=False, preProcessing=None):
+        self.preProcessing = preProcessing
+        if para:
+            setJason = []
+            with open('para.txt', 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                for line in lines:
+                    line = line.strip()
+                    setJason.append(json.loads(line))
+
+            self.words = set(setJason[0])
+            self.word_dict = setJason[1]
+            self.category_dict = setJason[2]
+            self.word_count = setJason[3]
+        else:
+            self.words = set()
+            self.word_dict = {}
+            self.category_dict = {}
+            self.word_count = {}
+
+    def inc_word(self, word, category):
+        if not category in self.word_dict:
+            self.word_dict[category] = {}
+        if not word in self.word_dict[category]:
+            self.word_dict[category][word] = 0
+        self.word_dict[category][word] += 1
+        self.words.add(word)
+
+    def inc_category(self, category):
+        if category not in self.category_dict:
+            self.category_dict[category] = 0
+        self.category_dict[category] += 1
+
+    def fit(self, text, category):
+        _, _, word_list = self.preProcessing.split(text)
+        for word in word_list:
+            self.inc_word(word, category)
+        self.inc_category(category)
+
+    def score(self, words, category):
+        score = math.log(self.category_prob(category))
+        for word in words:
+            score += math.log(self.word_prob(word, category))
+        return score
+
+    def predict(self, text):
+        best_category = None
+        max_score = -sys.maxsize
+        spacetext, corpus, words = self.preProcessing.split(text)
+        score_list = []
+        for category in self.category_dict.keys():
+            score = self.score(words, category)
+            score_list.append((category, score))
+            if score > max_score:
+                max_score = score
+                best_category = category
+        score_list = sorted(score_list, key=lambda i: i[1]) #score_list 정렬
+        score_list.reverse()
+        return spacetext, corpus, best_category, score_list[0:3], words
+
+    def get_word_count(self, word, category):
+        if word in self.word_dict[category]:
+            return self.word_dict[category][word]
+        else:
+            return 0
+
+    def category_prob(self, category):
+        sum_categories = sum(self.category_dict.values())
+        category_v = self.category_dict[category]
+        return category_v / sum_categories
+
+    def word_prob(self, word, category):
+        n = self.get_word_count(word, category) + 1
+        d = sum(self.word_dict[category].values()) + len(self.words)
+        return n / d
+
+    def get_total_word_count(self):
+        for category in self.word_dict:
+            for word in self.word_dict[category]:
+                if word not in self.word_count:
+                    self.word_count[word] = self.word_dict[category][word]
+                else:
+                    self.word_count[word] = self.word_count[word] + self.word_dict[category][word]
+        return self.word_count
