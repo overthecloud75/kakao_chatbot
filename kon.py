@@ -18,40 +18,6 @@ from pymongo import MongoClient
 mongoClient = MongoClient('mongodb://localhost:27017/')
 db = mongoClient['chatbot']
 
-def openText():
-    with open('synonym.txt', 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        synonym = {}
-        for line in lines:
-            line = line.split(',')
-            line[1] = line[1].strip()
-            synonym[line[0]] = line[1]
-
-    with open('stopwords.txt', 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        stopwords = []
-        for line in lines:
-            line = line.split(',')
-            line[0] = line[0].strip()
-            stopwords.append(line[0])
-
-    with open('custom_vocab.txt', 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        custom_vocab = []
-        for line in lines:
-            line = line.split(',')
-            line[0] = line[0].strip()
-            custom_vocab.append(line[0])
-
-    with open('split.txt', 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        split_words = {}
-        for line in lines:
-            line = line.split(',')
-            line[1] = line[1].strip()
-            split_words[line[0]] = line[1]
-    return synonym, stopwords, custom_vocab, split_words
-
 def paraSaveAndTest(para=False, filter=None, preProcessing=None):
 
     intent_train = []
@@ -90,14 +56,6 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
             f.write(json.dumps(filter.category_dict))
             f.write('\n')
             f.write(json.dumps(filter.get_total_word_count()))
-            f.write('\n')
-            f.write(json.dumps(preProcessing.synonym))
-            f.write('\n')
-            f.write(json.dumps(preProcessing.stopwords))
-            f.write('\n')
-            f.write(json.dumps(preProcessing.custom_vocab))
-            f.write('\n')
-            f.write(json.dumps(preProcessing.split_words))
 
         pre1 = 0
         pre2 = 0
@@ -144,13 +102,11 @@ def csvWrite():
 
 if __name__ == '__main__' :
 
-    synonym, stopwords, custom_vocab, split_words = openText()
-
     # 훈련시 para = False
     para = False
 
-    preProcessing = PreProcess(para=para, synonym=synonym, stopwords=stopwords, custom_vocab=custom_vocab, split_words=split_words)
-    bf = BayesianFilter(para=para, preProcessing=preProcessing) # presynonym=synonym, stopwords=stopwords, custom_vocab=custom_vocab, split_words=split_words)
+    preProcessing = PreProcess(para=para)
+    bf = BayesianFilter(para=para, preProcessing=preProcessing)
 
     intent_train, label_train, label_idx, idx_label, csvdatalist = paraSaveAndTest(para=para, filter=bf, preProcessing=preProcessing)
 

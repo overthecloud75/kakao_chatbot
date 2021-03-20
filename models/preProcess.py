@@ -9,19 +9,47 @@ han = re.compile('[ㄱ-ㅎㅏ-ㅣ]+')
 eng = re.compile('[a-zA-Z]+')
 twitter = Okt()
 
+def openText():
+    with open('synonym.txt', 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        synonym = {}
+        for line in lines:
+            line = line.split(',')
+            line[1] = line[1].strip()
+            synonym[line[0]] = line[1]
+
+    with open('stopwords.txt', 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        stopwords = []
+        for line in lines:
+            line = line.split(',')
+            line[0] = line[0].strip()
+            stopwords.append(line[0])
+
+    with open('custom_vocab.txt', 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        custom_vocab = []
+        for line in lines:
+            line = line.split(',')
+            line[0] = line[0].strip()
+            custom_vocab.append(line[0])
+
+    with open('split.txt', 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        split_words = {}
+        for line in lines:
+            line = line.split(',')
+            line[1] = line[1].strip()
+            split_words[line[0]] = line[1]
+    return synonym, stopwords, custom_vocab, split_words
+
 class PreProcess:
-    def __init__(self, para=False, synonym=None, stopwords=[], custom_vocab=[], split_words=None):
+    def __init__(self, para=False):
         # self.spacer = ChatSpace()
         self.spacer = PredSpacing()
         self.para = para
-        if synonym:
-            self.synonym = synonym
-        if stopwords:
-            self.stopwords = stopwords
-        if custom_vocab:
-            self.custom_vocab = custom_vocab
-        if split_words:
-            self.split_words = split_words
+
+        self.synonym, self.stopwords, self.custom_vocab, self.split_words = openText()
         if para:
             setJason = []
             with open('para.txt', 'r', encoding='utf-8') as f:
@@ -30,10 +58,6 @@ class PreProcess:
                     line = line.strip()
                     setJason.append(json.loads(line))
             self.word_count = setJason[3]
-            self.synonym = setJason[4]
-            self.stopwords = setJason[5]
-            self.custom_vocab = setJason[6]
-            self.split_words = setJason[7]
         else:
             self.word_count = {}
 
