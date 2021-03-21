@@ -1,9 +1,8 @@
-import math, sys
+import math
 import json
 
 class BayesianFilter:
-    def __init__(self, para=False, preProcessing=None):
-        self.preProcessing = preProcessing
+    def __init__(self, para=False):
         if para:
             setJason = []
             with open('para.txt', 'r', encoding='utf-8') as f:
@@ -35,9 +34,8 @@ class BayesianFilter:
             self.category_dict[category] = 0
         self.category_dict[category] += 1
 
-    def fit(self, text, category):
-        _, _, word_list = self.preProcessing.split(text)
-        for word in word_list:
+    def fit(self, words, category):
+        for word in words:
             self.inc_word(word, category)
         self.inc_category(category)
 
@@ -47,20 +45,14 @@ class BayesianFilter:
             score += math.log(self.word_prob(word, category))
         return score
 
-    def predict(self, text):
-        best_category = None
-        max_score = -sys.maxsize
-        spacetext, corpus, words = self.preProcessing.split(text)
+    def predict(self, words):
         score_list = []
         for category in self.category_dict.keys():
             score = self.score(words, category)
             score_list.append((category, score))
-            if score > max_score:
-                max_score = score
-                best_category = category
-        score_list = sorted(score_list, key=lambda i: i[1]) #score_list 정렬
+        score_list = sorted(score_list, key=lambda i: i[1]) # sort score_list
         score_list.reverse()
-        return spacetext, corpus, best_category, score_list[0:3], words
+        return score_list[0:3]
 
     def get_word_count(self, word, category):
         if word in self.word_dict[category]:

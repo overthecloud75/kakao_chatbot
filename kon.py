@@ -25,6 +25,8 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
     label_idx = {}
     idx_label = {}
 
+    csvdatalist = []
+
     if not para:
         collection = db['intent']
         finds = collection.find(filter={})
@@ -32,8 +34,6 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
         for find in finds:
             msg = find['msg']
             intent = find['intent']
-            filter.fit(msg, intent)
-
             if intent in label_idx:
                 idx = label_idx[intent]
                 label_train.append(idx)
@@ -43,8 +43,10 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
                 idx = label_idx[intent]
                 label_train.append(idx)
 
-            _, _, seperated = preProcessing.split(msg)
-            intent_train.append(seperated)
+            spacetext, corpus, words = preProcessing.split(msg)
+            filter.fit(words, intent)
+            csvdatalist.append([msg, spacetext, corpus, words, intent])
+            intent_train.append(words)
 
         print(filter.category_dict)
        # parameter 저장
@@ -60,13 +62,10 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
         pre1 = 0
         pre2 = 0
         precision = 0
-        csvdatalist = []
 
-        finds = collection.find(filter={})
-        for find in finds:
-            msg = find['msg']
-            intent = find['intent']
-            spacetext, corpus, pre, bayScore, words = filter.predict(msg)
+        for i, words in enumerate(intent_train):
+            bayScore = filter.predict(words)
+            intent = idx_label[label_train[i]]
             if intent == bayScore[0][0]:
                 pre1 = pre1 + 1
                 pre2 = pre2 + 1
@@ -77,8 +76,7 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
             elif intent == bayScore[2][0]:
                 precision = precision + 1
             else:
-                print(intent, bayScore, words, msg)
-            csvdatalist.append([msg, spacetext, corpus, words])
+                print(intent, bayScore, words)
         print('precision ', precision / total, pre2 / total, pre1 / total)
 
     return intent_train, label_train, label_idx, idx_label, csvdatalist
@@ -102,11 +100,11 @@ def csvWrite():
 
 if __name__ == '__main__' :
 
-    # 훈련시 para = False
+    # when training, para = False
     para = False
 
     preProcessing = PreProcess(para=para)
-    bf = BayesianFilter(para=para, preProcessing=preProcessing)
+    bf = BayesianFilter(para=para)
 
     intent_train, label_train, label_idx, idx_label, csvdatalist = paraSaveAndTest(para=para, filter=bf, preProcessing=preProcessing)
 

@@ -33,7 +33,7 @@ pipe_time = time.time()
 # bayesianFilter
 para = True
 preProcessing = PreProcess(para=para)
-bf = BayesianFilter(para=para, preProcessing=preProcessing)
+bf = BayesianFilter(para=para)
 
 # dnn model parameter 열기
 model = tf.keras.models.load_model('intent.h5')
@@ -112,12 +112,14 @@ def index():
         elif 'http' in message['msg'] and ('.mp4' in message['msg'] or '.mpg' in message['msg'] or '.avi' in message['msg']):
             response['template']['outputs'] = cardResponse(title='동영상')
         else:
-            spacetext, corpus, pre, bayScore, words = bf.predict(message['msg'])
+
+            spacetext, corpus, words = preProcessing.split(message['msg'])
             current_app.logger.info('%s - %s' %('words', words))
 
             deepScore = deepPrediction(words)
-            current_app.logger.info('%s - %s' %('deep predcition', str(deepScore)))
-            # deeplearning 및 bayesian 결과 비교
+            bayScore = bf.predict(words)
+
+            # compare deeplearning and bayesian
             try:
                 dbWrite(message['msg'], spacetext, corpus, words, deepScore, bayScore)
             except:
@@ -130,9 +132,10 @@ def index():
                     return '', 204
                 response['template']['outputs'] = text
             else:
+                current_app.logger.info('%s - %s' % ('deep predcition', str(deepScore)))
                 current_app.logger.info('%s - %s' %('bayesian', bayScore))
-                if bf.category_dict[pre] > 5:
-                    intent = deepScore[0][0]
+                intent = deepScore[0][0]
+                if bf.category_dict[intent] > 5:
                     simple, text = simpleResponse(intent=intent)
                     if text == '':
                         return text, 204
