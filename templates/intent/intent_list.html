@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+<table class="table">
+    {% if intent_list %}
+        <thead>
+        <tr class="thead-dark">
+            <th>번호</th>
+            <th>intent</th>
+            <th>개수</th>
+        </tr>
+        {% for intent in intent_list %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td><a href="{{ url_for('intent.intent_detail', intent=intent.intent) }}">{{ intent.intent }}</a></td>
+            <td>{{ intent.count }}</td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="3">의도가 없습니다.</td>
+        </tr>
+{% endif %}
+</table>
+</div>
+{% endblock %}

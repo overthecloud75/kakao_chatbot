@@ -50,14 +50,16 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
 
         print(filter.category_dict)
        # parameter 저장
-        with open('para.txt', 'w', encoding='utf-8') as f:
-            f.write(json.dumps(list(filter.words)))
-            f.write('\n')
-            f.write(json.dumps(filter.word_dict))
-            f.write('\n')
-            f.write(json.dumps(filter.category_dict))
-            f.write('\n')
-            f.write(json.dumps(filter.get_total_word_count()))
+        collection = db['bayesian']
+
+        update = {'words': list(filter.words)}
+        collection.update_one({'words':{'$exists':'true'}}, {'$set': update}, upsert=True)
+        update = {'word_dict': filter.word_dict}
+        collection.update_one({'word_dict':{'$exists':'true'}}, {'$set': update}, upsert=True)
+        update = {'category_dict': filter.category_dict}
+        collection.update_one({'category_dict':{'$exists':'true'}}, {'$set': update}, upsert=True)
+        update = {'word_count': filter.get_total_word_count()}
+        collection.update_one({'word_count':{'$exists':'true'}}, {'$set': update}, upsert=True)
 
         pre1 = 0
         pre2 = 0
@@ -81,7 +83,7 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
 
     return intent_train, label_train, label_idx, idx_label, csvdatalist
 
-def modelParaSave(word_index, idx_label, max_len_list):
+def deepModelParaSave(word_index, idx_label, max_len_list):
     with open('model.txt', 'w', encoding='utf-8') as f:
         print(word_index)
         f.write(json.dumps(word_index))
@@ -160,7 +162,7 @@ if __name__ == '__main__' :
 
     print('precison: %s' %(str(k/len_intent)))
     max_len_list = [max_len]
-    modelParaSave(word_index, idx_label, max_len_list)
+    deepModelParaSave(word_index, idx_label, max_len_list)
 
     csvWrite()
 

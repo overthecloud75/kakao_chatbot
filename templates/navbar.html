@@ -1,0 +1,40 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+    <a class="navbar-brand" href="{{ url_for('main.index') }}">chatbot</a>
+    <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse flex-grow-0" id="navbarNav">
+        {% if g.user %}
+        <ul class="navbar-nav">
+            <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('main.logout') }}">{{ g.user.name }} (로그아웃)</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('intent._list') }}">intent</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('monitoring.monitoring') }}">monitoring</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('monitoring.statistics') }}">statistics</a>
+            </li>
+        </ul>
+        {% else %}
+        <ul class="navbar-nav">
+            <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('main.signup') }}">계정생성</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('main.login') }}">로그인</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('intent._list') }}">intent</a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="{{ url_for('monitoring.monitoring') }}">monitoring</a>
+            </li>
+        </ul>
+        {% endif %}
+    </div>
+</nav>

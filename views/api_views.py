@@ -53,7 +53,7 @@ max_len = setJason[2][0]
 userRequest = {}
 
 @bp.route('/',  methods=['GET', 'POST'])
-def index():
+def kakao():
     message = info(request.get_json())
     response = {'version':'2.0', 'template':{}}
     if not message:

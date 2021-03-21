@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+    <h1>{{ intent }}</h1>
+    {% if g.user %}
+    <form method="post" class="my-3">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="form-group">
+            <label for="msg">message</label>
+            <input type="text" class="form-control" name="msg" id="msg">
+        </div>
+        <button type="submit" class="btn btn-primary">intent 등록</button>
+    </form>
+    {% endif %}
+    <table class="table">
+        <thead>
+        <tr class="thead-dark">
+            <th>번호</th>
+            <th>message</th>
+            <th>작성일시</th>
+        </tr>
+        </thead>
+        {% if intent_list %}
+        {% for intent in intent_list %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ intent.msg }}</td>
+            <td></td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="3">의도가 없습니다.</td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+{% endblock %}

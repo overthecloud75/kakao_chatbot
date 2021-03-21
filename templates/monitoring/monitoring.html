@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+    <table class="table">
+        <thead>
+        <tr class="thead-dark">
+            <th>번호</th>
+            <th>message</th>
+            <th>뛰어쓰기</th>
+            <th>corpus</th>
+            <th>words</th>
+            <th>deep</th>
+            <th>bay</th>
+            <th>작성일시</th>
+            <th>상담원</th>
+            <th>확인</th>
+        </tr>
+        </thead>
+        {% if data_list %}
+        {% for data in data_list %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ data.msg }}</td>
+            <td>{{ data.spacetext }}</td>
+            <td>{{ data.corpus }}</td>
+            <td>{{ data.words }}</td>
+            <td>{{ data.deep[0][0] }} / {{ data.deep[1][0] }} / {{ data.deep[2][0] }}</td>
+            <td>{{ data.bay[0][0] }} / {{ data.bay[1][0] }} / {{data.bay[2][0] }}</td>
+            <td>{{ data.timestamp }}</td>
+            {% if not data.category and g.user %}
+            <form method="post" class="my-3">
+            {{ form.csrf_token }}
+            {% include "form_errors.html" %}
+                <input type="hidden" name="timestamp" value="{{ data.timestamp }}">
+                <td><input type="text" class="form-control" name="category" id="category" value="{{ data.deep[0][0] }}" size="40"></td>
+                <td><input type="submit" class="btn btn-primary"></td>
+            </form>
+            <td>{{ data.category }}</td>
+            <td></td>
+            {% else %}
+            <td>{{ data.category }}</td>
+            <td></td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="3">data가 없습니다.</td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+{% endblock %}
