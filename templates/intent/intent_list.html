@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
 {% block content %}
+
 <div class="container my-3">
 <table class="table">
-    {% if intent_list %}
+    {% if data_list %}
         <thead>
         <tr class="thead-dark">
             <th>번호</th>
             <th>intent</th>
             <th>개수</th>
         </tr>
-        {% for intent in intent_list %}
+        {% for intent in data_list %}
         <tr>
             <td>{{ loop.index }}</td>
             <td><a href="{{ url_for('intent.intent_detail', intent=intent.intent) }}">{{ intent.intent }}</a></td>
@@ -23,4 +24,6 @@
 {% endif %}
 </table>
 </div>
+
+{% include "paging.html" %}
 {% endblock %}

@@ -33,3 +33,19 @@ def _request_data(verb, url, params=None, headers=None, data=None, stream=False)
         else:
             print(r.status_code, data)
             return None
+
+def paginate(page, limit, count):
+    offset = (page - 1) * limit
+    total_page = int(count / limit) + 1
+    paging = {'page':page,
+              'has_prev':True,
+              'has_next':True,
+              'prev_num':page-1,
+              'next_num': page+1,
+              'pages':[x + 1  for x in range(total_page)]
+              }
+    if page == 1:
+        paging['has_prev'] = False
+    if offset > count or offset + limit > count:
+        paging['has_next'] = False
+    return paging

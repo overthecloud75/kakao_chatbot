@@ -5,6 +5,11 @@ import json
 
 import re
 
+# database
+from pymongo import MongoClient
+mongoClient = MongoClient('mongodb://localhost:27017/')
+db = mongoClient['chatbot']
+
 han = re.compile('[ㄱ-ㅎㅏ-ㅣ]+')
 eng = re.compile('[a-zA-Z]+')
 twitter = Okt()
@@ -51,13 +56,9 @@ class PreProcess:
 
         self.synonym, self.stopwords, self.custom_vocab, self.split_words = openText()
         if para:
-            setJason = []
-            with open('para.txt', 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-                for line in lines:
-                    line = line.strip()
-                    setJason.append(json.loads(line))
-            self.word_count = setJason[3]
+            collection = db['bayesian']
+            data = collection.find_one(filter={'word_count': {'$exists': 'true'}})
+            self.word_count = data['word_count']
         else:
             self.word_count = {}
 

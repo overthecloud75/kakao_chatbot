@@ -1,3 +1,4 @@
+import os
 import json
 
 import numpy as np
@@ -138,9 +139,8 @@ if __name__ == '__main__' :
                         epochs=100,
                         validation_data=(intent_train, label_train))
 
-    model.save('intent.h5')
-
-    model = tf.keras.models.load_model('intent.h5')
+    model.save('models/intent.h5')
+    model = tf.keras.models.load_model('models/intent.h5')
     len_intent = intent_train.shape[0]
 
     k = 0

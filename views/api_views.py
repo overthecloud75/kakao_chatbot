@@ -10,7 +10,7 @@ import matplotlib
 matplotlib.use('agg')
 import cv2
 
-from .config import config_scorelist, config_account, config_system
+from .category_config import config_scorelist, config_account, config_system
 from .response import conditionalCheckIntent, simpleResponse, cardResponse
 from .utils import dbWrite, _request_data
 
@@ -36,7 +36,7 @@ preProcessing = PreProcess(para=para)
 bf = BayesianFilter(para=para)
 
 # dnn model parameter 열기
-model = tf.keras.models.load_model('intent.h5')
+model = tf.keras.models.load_model('models/intent.h5')
 
 setJason = []
 with open('model.txt', 'r', encoding='utf-8') as f:

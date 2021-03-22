@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container my-3">
+<div class="container my-3" style="max-width:1800px;">
     <table class="table">
         <thead>
         <tr class="thead-dark">
@@ -51,4 +51,5 @@
     </table>
 </div>
 
+{% include "paging.html" %}
 {% endblock %}

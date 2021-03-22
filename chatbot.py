@@ -3,8 +3,14 @@ import logging
 from flask import Flask
 
 def create_app():
+    log_dir = 'log'
+    if os.path.exists(log_dir):
+        pass
+    else:
+        os.makedirs(log_dir)
+
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler = logging.FileHandler('apiserver.log')
+    handler = logging.FileHandler(log_dir + '/server.log')
     handler.setLevel(logging.INFO)
     handler.setFormatter(formatter)
 
