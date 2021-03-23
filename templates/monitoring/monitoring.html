@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container my-3" style="max-width:1800px;">
+
+<div class="container my-3">
+    <!-- style="max-width:1800px;"> -->
+
+    {% include 'search.html' %}
+
     <table class="table">
         <thead>
         <tr class="thead-dark">
@@ -12,20 +17,28 @@
             <th>deep</th>
             <th>bay</th>
             <th>작성일시</th>
-            <th>상담원</th>
+            <th style="width:8%">상담원</th>
             <th>확인</th>
         </tr>
         </thead>
         {% if data_list %}
         {% for data in data_list %}
         <tr>
-            <td>{{ loop.index }}</td>
+            <td>{{ paging.count - paging.offset - loop.index0 }}</td>
             <td>{{ data.msg }}</td>
             <td>{{ data.spacetext }}</td>
             <td>{{ data.corpus }}</td>
             <td>{{ data.words }}</td>
+            {% if data.category and data.category != data.deep[0][0] %}
+            <td style="color:red">{{ data.deep[0][0] }} / {{ data.deep[1][0] }} / {{ data.deep[2][0] }}</td>
+            {% else %}
             <td>{{ data.deep[0][0] }} / {{ data.deep[1][0] }} / {{ data.deep[2][0] }}</td>
+            {% endif %}
+            {% if data.category and data.category != data.bay[0][0] %}
+            <td style="color:red">{{ data.bay[0][0] }} / {{ data.bay[1][0] }} / {{data.bay[2][0] }}</td>
+            {% else %}
             <td>{{ data.bay[0][0] }} / {{ data.bay[1][0] }} / {{data.bay[2][0] }}</td>
+            {% endif %}
             <td>{{ data.timestamp }}</td>
             {% if not data.category and g.user %}
             <form method="post" class="my-3">
@@ -51,5 +64,5 @@
     </table>
 </div>
 
-{% include "paging.html" %}
+{% include 'paging.html' %}
 {% endblock %}

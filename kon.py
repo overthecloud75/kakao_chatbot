@@ -10,9 +10,9 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.utils import to_categorical
 import tensorflow as tf
-from models.deep_model import IntentModel
-from models.bayesianFilter import BayesianFilter
-from models.preProcess import PreProcess
+from predictions.deep_model import IntentModel
+from predictions.bayesianFilter import BayesianFilter
+from predictions.preProcess import PreProcess
 
 # database
 from pymongo import MongoClient
@@ -139,8 +139,8 @@ if __name__ == '__main__' :
                         epochs=100,
                         validation_data=(intent_train, label_train))
 
-    model.save('models/intent.h5')
-    model = tf.keras.models.load_model('models/intent.h5')
+    model.save('predictions/intent.h5')
+    model = tf.keras.models.load_model('predictions/intent.h5')
     len_intent = intent_train.shape[0]
 
     k = 0

@@ -12,11 +12,12 @@ import cv2
 
 from .category_config import config_scorelist, config_account, config_system
 from .response import conditionalCheckIntent, simpleResponse, cardResponse
-from .utils import dbWrite, _request_data
+from models import kakaoWrite
+from utils import _request_data
 
 # prediction
-from models.preProcess import PreProcess
-from models.bayesianFilter import BayesianFilter
+from predictions.preProcess import PreProcess
+from predictions.bayesianFilter import BayesianFilter
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
@@ -36,7 +37,7 @@ preProcessing = PreProcess(para=para)
 bf = BayesianFilter(para=para)
 
 # dnn model parameter 열기
-model = tf.keras.models.load_model('models/intent.h5')
+model = tf.keras.models.load_model('predictions/intent.h5')
 
 setJason = []
 with open('model.txt', 'r', encoding='utf-8') as f:
@@ -79,8 +80,8 @@ def kakao():
                 # word extraction
                 words = []
                 for i in range(len(prediction[0])):
-                    if prediction[0][i][0] in bf.synonym:
-                        words.append(bf.synonym[prediction[0][i][0]])
+                    if prediction[0][i][0] in preProcessing.synonym:
+                        words.append(preProcessing.synonym[prediction[0][i][0]])
                     else:
                         words.append(prediction[0][i][0])
                 cv2.imwrite(raw_image_url,  cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
@@ -121,7 +122,7 @@ def kakao():
 
             # compare deeplearning and bayesian
             try:
-                dbWrite(message['msg'], spacetext, corpus, words, deepScore, bayScore)
+                kakaoWrite(message['msg'], spacetext, corpus, words, deepScore, bayScore)
             except:
                 pass
 

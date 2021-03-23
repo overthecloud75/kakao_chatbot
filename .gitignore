@@ -9,7 +9,7 @@ old/
 raw_image/
 views/__pycache__
 views/category_config.py
-models/intent.h5
+predictions/intent.h5
 compare.csv
 compare2.xlsx
 kon.csv

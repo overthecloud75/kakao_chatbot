@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-3">
+    <!-- style="max-width:1800px;"> -->
+
+    {% include 'search.html' %}
+
+    <table class="table">
+        <thead>
+        <tr class="thead-dark">
+            <th>번호</th>
+            <th>date</th>
+            <th>count</th>
+            <th>unknown</th>
+            <th>no_decision</th>
+            <th>deep_accuracy</th>
+            <th>bay_accuracy</th>
+        </tr>
+        </thead>
+        {% if data_list %}
+        {% for data in data_list %}
+        <tr>
+            <td>{{ paging.count - paging.offset - loop.index0 }}</td>
+            <td>{{ data.date }}</td>
+            <td>{{ data.count }}</td>
+            <td>{{ data.unknown }}</td>
+            <td>{{ data.no_decision }}</td>
+            <td>{{ data.deep_accuracy[0]}}% / {{ data.deep_accuracy[1]}}%/ {{ data.deep_accuracy[2]}}%</td>
+            <td>{{ data.bay_accuracy[0]}}% / {{ data.bay_accuracy[1]}}%/ {{ data.bay_accuracy[2]}}%</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="3">data가 없습니다.</td>
+        </tr>
+        {% endif %}
+    </table>
+</div>
+
+{% include 'paging.html' %}
+{% endblock %}

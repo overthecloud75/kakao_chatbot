@@ -1,3 +1,3 @@
 page_default = {
-    'limit': 20
+    'per_page': 20
 }
