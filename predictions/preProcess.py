@@ -1,7 +1,6 @@
 from konlpy.tag import Okt
 from pykospacing.kospacing import PredSpacing
 # from chatspace import ChatSpace
-import json
 
 import re
 

@@ -2,7 +2,6 @@
 {% block content %}
 
 <div class="container my-3">
-    <!-- style="max-width:1800px;"> -->
 
     {% include 'search.html' %}
 
@@ -37,6 +36,75 @@
         {% endif %}
     </table>
 </div>
-
 {% include 'paging.html' %}
+
+<div style="width:50%;margin-left:auto;margin-right: auto">
+    <canvas id="canvas"></canvas>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+
+<!-- https://www.chartjs.org/ -->
+<!-- https://towardsdatascience.com/flask-and-chart-js-tutorial-i-d33e05fba845 -->
+
+<script>
+new Chart(document.getElementById("canvas"), {
+    type: 'line',
+    data: {
+        labels: {{ xlabels | tojson }} ,
+        datasets: [{
+            label: 'deep_accuracy',
+            data: {{ deep_dataset | tojson }},
+            borderColor: "rgba(247, 16, 74, 1)",
+            fill: false,
+            lineTension: 0
+        },
+        {
+            label: 'bay_accuracy',
+            data: {{ bay_dataset | tojson }},
+            borderColor: "rgba(74, 16, 247, 1)",
+            fill: false,
+            lineTension: 0
+        }
+        ]
+    },
+    options: {
+        responsive: true,
+        title: {
+            position : 'bottom',
+            display: true,
+            text: 'chart',
+            fontSize : 20
+        },
+        legend : {
+            position : 'right'
+        },
+        tooltips: {
+            mode: 'index',
+            intersect: false,
+        },
+        hover: {
+            mode: 'nearest',
+            intersect: true
+        },
+        scales: {
+            xAxes: [{
+                display: true,
+                scaleLabel: {
+                    display: true,
+                }
+            }],
+            yAxes: [{
+                display: true,
+                ticks: {
+                },
+                scaleLabel: {
+                    display: true,
+                }
+            }]
+        }
+    }
+});
+
+</script>
 {% endblock %}

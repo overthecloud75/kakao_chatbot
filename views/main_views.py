@@ -24,7 +24,7 @@ bp = Blueprint('main', __name__, url_prefix='/')
 
 @bp.route('/')
 def index():
-    return render_template('/base.html')
+    return redirect(url_for('monitoring.monitoring'))
 
 @bp.route('/signup/', methods=('GET', 'POST'))
 def signup():

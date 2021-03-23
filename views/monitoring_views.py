@@ -35,5 +35,20 @@ def monitoring():
 @login_required
 def statistics():
     page = int(request.args.get('page', 1))
-    paging, data_list = get_statistics_list(page=page, sort='date')
-    return render_template('monitoring/statistics.html', paging=paging, data_list=data_list)
+    paging, collection_list = get_statistics_list(page=page, sort='date')
+    data_list = []
+    xlabels = []
+    deep_dataset = []
+    bay_dataset = []
+    for data in collection_list:
+        data_list.append(data)
+        xlabels.append(data['date'])
+        deep_dataset.append(data['deep_accuracy'][0])
+        bay_dataset.append(data['bay_accuracy'][0])
+    xlabels.reverse()
+    deep_dataset.reverse()
+    bay_dataset.reverse()
+    return render_template('monitoring/statistics.html', **locals())
+
+# render_template with multiple variables
+# **locals() : https://stackoverflow.com/questions/12096522/render-template-with-multiple-variables
