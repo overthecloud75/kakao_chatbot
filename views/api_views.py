@@ -20,6 +20,7 @@ from predictions.preProcess import PreProcess
 from predictions.bayesianFilter import BayesianFilter
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+from models import set_deep
 
 # blueprint
 bp = Blueprint('api', __name__, url_prefix='/api')
@@ -38,20 +39,7 @@ bf = BayesianFilter(para=para)
 
 # dnn model parameter 열기
 model = tf.keras.models.load_model('predictions/intent.h5')
-
-setJason = []
-with open('model.txt', 'r', encoding='utf-8') as f:
-    lines = f.readlines()
-    for line in lines:
-        line = line.strip()
-        setJason.append(json.loads(line))
-
-word_index = setJason[0]
-idx_label = setJason[1]
-max_len = setJason[2][0]
-
-# flask setting
-userRequest = {}
+word_index, idx_label, max_len = set_deep()
 
 @bp.route('/',  methods=['GET', 'POST'])
 def kakao():
@@ -179,7 +167,7 @@ def deepPrediction(words):
 
     score_list = []
     for idx in idx_label:
-        score_list.append((idx_label[idx], y[int(idx)]))
+        score_list.append((idx_label[str(idx)], y[int(idx)]))
     score_list = sorted(score_list, key=lambda i: i[1])
     score_list.reverse()
     return score_list[0:3]

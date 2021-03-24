@@ -1,6 +1,3 @@
-import os
-import json
-
 import numpy as np
 import csv
 import datetime
@@ -26,12 +23,11 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
     label_idx = {}
     idx_label = {}
 
-    csvdatalist = []
-
     if not para:
         collection = db['intent']
         finds = collection.find(filter={})
         total = collection.count_documents({})
+        collection = db['nlp']
         for find in finds:
             msg = find['msg']
             intent = find['intent']
@@ -39,14 +35,22 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
                 idx = label_idx[intent]
                 label_train.append(idx)
             else:
-                idx_label[len(label_idx)] = intent
+                idx_label[str(len(label_idx))] = intent
                 label_idx[intent] = len(label_idx)
                 idx = label_idx[intent]
                 label_train.append(idx)
+                # Why using integer as a key with pymongo doesn't work?
+                # https://stackoverflow.com/questions/21592468/why-using-integer-as-a-key-with-pymongo-doesnt-work
 
             spacetext, corpus, words = preProcessing.split(msg)
             filter.fit(words, intent)
-            csvdatalist.append([msg, spacetext, corpus, words, intent])
+            update = {'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                      'msg':msg,
+                      'spacetext':spacetext,
+                      'corpus':corpus,
+                      'words': words,
+                      'intent':intent}
+            collection.update_one({'msg':msg}, {'$set': update}, upsert=True)
             intent_train.append(words)
 
         print(filter.category_dict)
@@ -68,7 +72,7 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
 
         for i, words in enumerate(intent_train):
             bayScore = filter.predict(words)
-            intent = idx_label[label_train[i]]
+            intent = idx_label[str(label_train[i])]
             if intent == bayScore[0][0]:
                 pre1 = pre1 + 1
                 pre2 = pre2 + 1
@@ -81,25 +85,18 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
             else:
                 print(intent, bayScore, words)
         print('precision ', precision / total, pre2 / total, pre1 / total)
-
-    return intent_train, label_train, label_idx, idx_label, csvdatalist
+    return intent_train, label_train, label_idx, idx_label
 
 def deepModelParaSave(word_index, idx_label, max_len_list):
-    with open('model.txt', 'w', encoding='utf-8') as f:
-        print(word_index)
-        f.write(json.dumps(word_index))
-        f.write('\n')
-        f.write(json.dumps(idx_label))
-        f.write('\n')
-        f.write(json.dumps(max_len_list))
+    # parameter 저장
+    collection = db['deep']
 
-def csvWrite():
-    f = open('kon.csv', 'a', encoding='utf-8-sig', newline='')
-    wr = csv.writer(f)
-    for data in csvdatalist:
-        add = [datetime.datetime.now().strftime('%m/%d/%Y, %H:%M:%S'), data[0], data[1], data[2], data[3]]
-        wr.writerow(add)
-    f.close()
+    update = {'word_index': word_index}
+    collection.update_one({'word_index': {'$exists': 'true'}}, {'$set': update}, upsert=True)
+    update = {'idx_label': idx_label}
+    collection.update_one({'idx_label': {'$exists': 'true'}}, {'$set': update}, upsert=True)
+    update = {'max_len_list': max_len_list}
+    collection.update_one({'max_len_list': {'$exists': 'true'}}, {'$set': update}, upsert=True)
 
 if __name__ == '__main__' :
 
@@ -109,7 +106,7 @@ if __name__ == '__main__' :
     preProcessing = PreProcess(para=para)
     bf = BayesianFilter(para=para)
 
-    intent_train, label_train, label_idx, idx_label, csvdatalist = paraSaveAndTest(para=para, filter=bf, preProcessing=preProcessing)
+    intent_train, label_train, label_idx, idx_label = paraSaveAndTest(para=para, filter=bf, preProcessing=preProcessing)
 
     tokenizer = Tokenizer()
     tokenizer.fit_on_texts(intent_train)
@@ -163,8 +160,6 @@ if __name__ == '__main__' :
     print('precison: %s' %(str(k/len_intent)))
     max_len_list = [max_len]
     deepModelParaSave(word_index, idx_label, max_len_list)
-
-    csvWrite()
 
 
 

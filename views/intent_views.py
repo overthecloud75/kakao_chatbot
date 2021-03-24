@@ -1,6 +1,6 @@
 from flask import Blueprint, request, render_template
 from form import IntentMessageForm
-from models import get_intent_list, get_intent_paging, get_intent_data_list, post_intent
+from models import get_intent_list, get_intent_paging, get_intent_data_list, post_intent, get_nlp_paging
 
 intent_list = get_intent_list()
 
@@ -21,3 +21,9 @@ def intent_detail(intent):
         post_intent(request_data)
     paging, data_list = get_intent_data_list(intent, page=page)
     return render_template('intent/intent_detail.html', form=form, intent=intent, paging=paging, data_list=data_list)
+
+@bp.route('/nlp/')
+def nlp():
+    page = int(request.args.get('page', 1))
+    paging, data_list = get_nlp_paging(page=page)
+    return render_template('intent/nlp.html', paging=paging, data_list=data_list)

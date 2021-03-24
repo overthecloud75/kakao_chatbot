@@ -1,21 +1,50 @@
 import datetime
 from views.config import page_default
-from utils import calculate_accuracy
+from utils import calculate_accuracy, paginate
 from pymongo import MongoClient
 
 mongoClient = MongoClient('mongodb://localhost:27017/')
 db = mongoClient['chatbot']
 
-def get_category_list():
+# bayesianFilter.py
+def set_baysien():
     collection = db['bayesian']
+
+    data = collection.find_one(filter={'words': {'$exists': 'true'}})
+    words = data['words']
+    data = collection.find_one(filter={'word_dict': {'$exists': 'true'}})
+    word_dict = data['word_dict']
     data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
     category_dict = data['category_dict']
+    data = collection.find_one(filter={'word_count': {'$exists': 'true'}})
+    word_count = data['word_count']
+    return words, word_dict, category_dict, word_count
 
-    category_list = []
-    for key in category_dict:
-        category_list.append(key)
-    return category_list
+# api_views.py
+def set_deep():
+    collection = db['deep']
 
+    data = collection.find_one(filter={'word_index': {'$exists': 'true'}})
+    word_index = data['word_index']
+    data = collection.find_one(filter={'idx_label': {'$exists': 'true'}})
+    idx_label = data['idx_label']
+    data = collection.find_one(filter={'max_len_list': {'$exists': 'true'}})
+    max_len = data['max_len_list'][0]
+    return word_index, idx_label, max_len
+
+def kakaoWrite(msg, spacetext, corpus, words, deepScore, bayScore):
+    data = {'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+               'msg': msg,
+               'spacetext': spacetext,
+               'corpus': corpus,
+               'words': words,
+               'deep': deepScore,
+               'bay': bayScore,
+               }
+    collection = db['kakao']
+    collection.insert(data)
+
+# intent_view.py
 def get_intent_list():
     collection = db['bayesian']
     data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
@@ -51,17 +80,25 @@ def post_intent(request_data):
     collection = db['intent']
     collection.update_one(request_data, {'$set':request_data}, upsert=True)
 
-def kakaoWrite(msg, spacetext, corpus, words, deepScore, bayScore):
-    data = {'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-               'msg': msg,
-               'spacetext': spacetext,
-               'corpus': corpus,
-               'words': words,
-               'deep': deepScore,
-               'bay': bayScore,
-               }
-    collection = db['kakao']
-    collection.insert(data)
+def get_nlp_paging(page=1):
+    per_page = page_default['per_page']
+    offset = (page - 1) * per_page
+    collection = db['nlp']
+    count = collection.count()
+    data_list = collection.find().limit(per_page).skip(offset)
+    paging = paginate(page, per_page, count)
+    return paging, data_list
+
+#monitoring_view.py
+def get_category_list():
+    collection = db['bayesian']
+    data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
+    category_dict = data['category_dict']
+
+    category_list = []
+    for key in category_dict:
+        category_list.append(key)
+    return category_list
 
 def get_monitoring_data_list(page=1, sort='timestamp'):
     per_page = page_default['per_page']
@@ -100,20 +137,3 @@ def get_statistics_list(page=1, sort='date'):
     paging = paginate(page, per_page, count)
     return paging, data_list
 
-def paginate(page, per_page, count):
-    offset = (page - 1) * per_page
-    total_page = int(count / per_page) + 1
-    paging = {'page':page,
-              'has_prev':True,
-              'has_next':True,
-              'prev_num':page-1,
-              'next_num':page+1,
-              'count': count,
-              'offset':offset,
-              'pages':[x + 1  for x in range(total_page)]
-              }
-    if page == 1:
-        paging['has_prev'] = False
-    if offset > count or offset + per_page > count:
-        paging['has_next'] = False
-    return paging

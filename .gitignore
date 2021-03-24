@@ -10,14 +10,9 @@ raw_image/
 views/__pycache__
 views/category_config.py
 predictions/intent.h5
-compare.csv
-compare2.xlsx
-kon.csv
-model.txt
 bay.txt
 custom_vocab.txt
 split.txt
 stopwords.txt
 synonym.txt
-unknown.txt
 kakao_chatbot.pptx

@@ -1,25 +1,10 @@
 import math
-import json
-
-# database
-from pymongo import MongoClient
-mongoClient = MongoClient('mongodb://localhost:27017/')
-db = mongoClient['chatbot']
+from models import set_baysien
 
 class BayesianFilter:
     def __init__(self, para=False):
         if para:
-
-            collection = db['bayesian']
-
-            data = collection.find_one(filter={'words':{'$exists':'true'}})
-            self.words = data['words']
-            data = collection.find_one(filter={'word_dict':{'$exists':'true'}})
-            self.word_dict = data['word_dict']
-            data = collection.find_one(filter={'category_dict':{'$exists':'true'}})
-            self.category_dict = data['category_dict']
-            data = collection.find_one(filter={'word_count':{'$exists':'true'}})
-            self.word_count = data['word_count']
+            self.words, self.word_dict, self.category_dict, self.word_count = set_baysien()
         else:
             self.words = set()
             self.word_dict = {}
