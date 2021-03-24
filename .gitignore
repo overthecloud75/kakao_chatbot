@@ -1,9 +1,7 @@
 .idea/
 __pycache__/
 chatspace/
-data/
 image_detection/
-ko/
 log/
 old/
 raw_image/

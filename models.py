@@ -80,12 +80,32 @@ def post_intent(request_data):
     collection = db['intent']
     collection.update_one(request_data, {'$set':request_data}, upsert=True)
 
-def get_nlp_paging(page=1):
+def get_nlp_list(page=1, keyword=None):
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
     collection = db['nlp']
-    count = collection.count()
-    data_list = collection.find().limit(per_page).skip(offset)
+    if keyword:
+        data_list = collection.find({'words':{'$regex':keyword}}).limit(per_page).skip(offset)
+    else:
+        data_list = collection.find().limit(per_page).skip(offset)
+    count = data_list.count()
+    paging = paginate(page, per_page, count)
+    return paging, data_list
+
+def get_word_list(page=1):
+    per_page = page_default['per_page']
+    offset = (page - 1) * per_page
+    collection = db['bayesian']
+    data = collection.find_one(filter={'word_count': {'$exists': 'true'}}, )
+    word_count = data['word_count']
+    collection = db['deep']
+    data = collection.find_one(filter={'index_word': {'$exists': 'true'}})
+    data_list = []
+    print(data['index_word'])
+    count = len(data['index_word'])
+    index_word = data['index_word'][offset:offset+per_page]
+    for word in index_word:
+        data_list.append({'word':word, 'count':word_count[word]})
     paging = paginate(page, per_page, count)
     return paging, data_list
 
@@ -100,12 +120,15 @@ def get_category_list():
         category_list.append(key)
     return category_list
 
-def get_monitoring_data_list(page=1, sort='timestamp'):
+def get_monitoring_data_list(page=1, sort='timestamp', keyword=None):
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
     collection = db['kakao']
-    count = collection.count()
-    data_list = collection.find(sort=[(sort, -1)]).limit(per_page).skip(offset)
+    if keyword:
+        data_list = collection.find({'msg':{'$regex':keyword}}, sort=[(sort, -1)]).limit(per_page).skip(offset)
+    else:
+        data_list = collection.find(sort=[(sort, -1)]).limit(per_page).skip(offset)
+    count = data_list.count()
     paging = paginate(page, per_page, count)
     return paging, data_list
 

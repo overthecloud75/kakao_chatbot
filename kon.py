@@ -87,12 +87,14 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
         print('precision ', precision / total, pre2 / total, pre1 / total)
     return intent_train, label_train, label_idx, idx_label
 
-def deepModelParaSave(word_index, idx_label, max_len_list):
+def deepModelParaSave(word_index, index_words, idx_label, max_len_list):
     # parameter 저장
     collection = db['deep']
 
     update = {'word_index': word_index}
     collection.update_one({'word_index': {'$exists': 'true'}}, {'$set': update}, upsert=True)
+    update = {'index_word': index_words}
+    collection.update_one({'index_word': {'$exists': 'true'}}, {'$set': update}, upsert=True)
     update = {'idx_label': idx_label}
     collection.update_one({'idx_label': {'$exists': 'true'}}, {'$set': update}, upsert=True)
     update = {'max_len_list': max_len_list}
@@ -114,6 +116,9 @@ if __name__ == '__main__' :
 
     word_index = tokenizer.word_index
     index_word = tokenizer.index_word
+    index_words = []
+    for key in word_index:
+        index_words.append(key)
     vocab_size = len(word_index) + 1
 
     max_len = max(len(l) for l in sequences)
@@ -159,7 +164,8 @@ if __name__ == '__main__' :
 
     print('precison: %s' %(str(k/len_intent)))
     max_len_list = [max_len]
-    deepModelParaSave(word_index, idx_label, max_len_list)
+    deepModelParaSave(word_index, index_words, idx_label, max_len_list)
+    print(word_index)
 
 
 

@@ -49,7 +49,7 @@ def signup():
             request_data['user_id'] = user_id
             collection.insert(request_data)
             return redirect(url_for('main.index'))
-    return render_template('/signup.html', form=form)
+    return render_template('account/signup.html', form=form)
 
 @bp.route('/login/', methods=('GET', 'POST'))
 def login():
@@ -72,7 +72,7 @@ def login():
                 session[key] = user_data[key]
             return redirect(url_for('main.index'))
         flash(error)
-    return render_template('/login.html', form=form)
+    return render_template('account/login.html', form=form)
 
 @bp.route('/logout/')
 @login_required

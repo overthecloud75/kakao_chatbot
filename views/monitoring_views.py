@@ -21,6 +21,7 @@ def login_required(view):
 def monitoring():
     form = MonitoringForm()
     page = int(request.args.get('page', 1))
+    keyword = request.args.get('kw', None)
 
     if request.method == 'POST' and form.validate_on_submit():
         category = form.category.data
@@ -28,7 +29,7 @@ def monitoring():
             flash('there is no that kind of category')
         else:
             post_monitoring(timestamp=form.timestamp.data, category=category)
-    paging, data_list = get_monitoring_data_list(page=page, sort='timestamp')
+    paging, data_list = get_monitoring_data_list(page=page, sort='timestamp', keyword=keyword)
     return render_template('monitoring/monitoring.html', form=form, paging=paging, data_list=data_list)
 
 @bp.route('/statistics/', methods=('GET', 'POST'))
