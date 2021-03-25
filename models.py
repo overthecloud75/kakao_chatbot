@@ -56,7 +56,7 @@ def get_intent_list():
         intent_list.append(intent)
     return intent_list
 
-def get_intent_paging(intent_list, page=1):
+def get_intent_paging(intent_list, page=1, sort=None):
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
     count = len(intent_list)
@@ -77,8 +77,19 @@ def get_intent_data_list(intent, page=1):
     return paging, data_list
 
 def post_intent(request_data):
-    collection = db['intent']
-    collection.update_one(request_data, {'$set':request_data}, upsert=True)
+    if 'msg' in request_data:
+        collection = db['intent']
+        collection.update_one(request_data, {'$set':request_data}, upsert=True)
+    else:
+        collection = db['bayesian']
+        data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
+        category_dict = data['category_dict']
+        intent = request_data['intent']
+        if request_data['intent'] in category_dict:
+            pass
+        else:
+            category_dict[intent] = 0
+            collection.update_one({'category_dict': {'$exists': 'true'}}, {'$set': {'category_dict' : category_dict}}, upsert=True)
 
 def get_nlp_list(page=1, keyword=None):
     per_page = page_default['per_page']
@@ -92,7 +103,9 @@ def get_nlp_list(page=1, keyword=None):
     paging = paginate(page, per_page, count)
     return paging, data_list
 
-def get_word_list(page=1):
+def get_word_list(page=1, sort=None):
+    if sort is None:
+        sort = [('count', -1)]
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
     collection = db['bayesian']
@@ -101,9 +114,11 @@ def get_word_list(page=1):
     collection = db['deep']
     data = collection.find_one(filter={'index_word': {'$exists': 'true'}})
     data_list = []
-    print(data['index_word'])
     count = len(data['index_word'])
-    index_word = data['index_word'][offset:offset+per_page]
+    index_word = data['index_word']
+    if sort[0][1] == 1:
+        index_word.reverse()
+    index_word = index_word[offset:offset+per_page]
     for word in index_word:
         data_list.append({'word':word, 'count':word_count[word]})
     paging = paginate(page, per_page, count)
@@ -120,14 +135,16 @@ def get_category_list():
         category_list.append(key)
     return category_list
 
-def get_monitoring_data_list(page=1, sort='timestamp', keyword=None):
+def get_monitoring_data_list(page=1, sort=None, keyword=None):
+    if sort is None:
+        sort = [('timestamp', -1)]
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
     collection = db['kakao']
     if keyword:
-        data_list = collection.find({'msg':{'$regex':keyword}}, sort=[(sort, -1)]).limit(per_page).skip(offset)
+        data_list = collection.find({'msg':{'$regex':keyword}}, sort=sort).limit(per_page).skip(offset)
     else:
-        data_list = collection.find(sort=[(sort, -1)]).limit(per_page).skip(offset)
+        data_list = collection.find(sort=sort).limit(per_page).skip(offset)
     count = data_list.count()
     paging = paginate(page, per_page, count)
     return paging, data_list
@@ -136,7 +153,9 @@ def post_monitoring(timestamp=None, category=None):
     collection = db['kakao']
     collection.update_one({'timestamp':timestamp}, {'$set': {'category':category}})
 
-def get_statistics_list(page=1, sort='date'):
+def get_statistics_list(page=1, sort=None):
+    if sort is None:
+        sort = [('date', -1)]
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
 
@@ -156,7 +175,7 @@ def get_statistics_list(page=1, sort='date'):
         today = today - datetime.timedelta(days=1)
     collection = db['statistics']
     count = collection.count()
-    data_list = collection.find(sort=[(sort, -1)]).limit(per_page).skip(offset)
+    data_list = collection.find(sort=sort).limit(per_page).skip(offset)
     paging = paginate(page, per_page, count)
     return paging, data_list
 

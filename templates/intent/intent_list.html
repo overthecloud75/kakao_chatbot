@@ -2,13 +2,24 @@
 {% block content %}
 
 <div class="container my-3">
+    {% if g.user %}
+    <form method="post" class="my-3">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="form-group">
+            <label for="msg">intent</label>
+            <input type="text" class="form-control" name="msg" id="msg">
+        </div>
+        <button type="submit" class="btn btn-primary">intent 등록</button>
+    </form>
+    {% endif %}
 <table class="table">
     {% if data_list %}
         <thead>
         <tr class="thead-dark">
             <th>번호</th>
             <th>intent</th>
-            <th>개수</th>
+            <th>count</th>
         </tr>
         {% for intent in data_list %}
         <tr>

@@ -8,7 +8,6 @@ raw_image/
 views/__pycache__
 views/category_config.py
 predictions/intent.h5
-bay.txt
 custom_vocab.txt
 split.txt
 stopwords.txt

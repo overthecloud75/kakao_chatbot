@@ -2,6 +2,7 @@ from flask import Blueprint, request, render_template, url_for, current_app, ses
 from werkzeug.utils import redirect
 from form import MonitoringForm
 from models import get_category_list, get_monitoring_data_list, post_monitoring, get_statistics_list
+from utils import request_get
 import functools
 
 category_list = get_category_list()
@@ -20,23 +21,23 @@ def login_required(view):
 @bp.route('/', methods=('GET', 'POST'))
 def monitoring():
     form = MonitoringForm()
-    page = int(request.args.get('page', 1))
-    keyword = request.args.get('kw', None)
-
+    sort_type = 'timestamp'
+    page, keyword, so, so_list = request_get(request.args, sort_type=sort_type)
     if request.method == 'POST' and form.validate_on_submit():
         category = form.category.data
         if category not in category_list and category != 'unknown':
             flash('there is no that kind of category')
         else:
             post_monitoring(timestamp=form.timestamp.data, category=category)
-    paging, data_list = get_monitoring_data_list(page=page, sort='timestamp', keyword=keyword)
-    return render_template('monitoring/monitoring.html', form=form, paging=paging, data_list=data_list)
+    paging, data_list = get_monitoring_data_list(page=page, sort=so_list, keyword=keyword)
+    return render_template('monitoring/monitoring.html', **locals())
 
 @bp.route('/statistics/', methods=('GET', 'POST'))
 @login_required
 def statistics():
-    page = int(request.args.get('page', 1))
-    paging, collection_list = get_statistics_list(page=page, sort='date')
+    sort_type = 'date'
+    page, keyword, so, so_list = request_get(request.args, sort_type=sort_type)
+    paging, collection_list = get_statistics_list(page=page, sort=so_list)
     data_list = []
     xlabels = []
     deep_dataset = []
@@ -49,6 +50,7 @@ def statistics():
     xlabels.reverse()
     deep_dataset.reverse()
     bay_dataset.reverse()
+    sort_type = 'timestamp'
     return render_template('monitoring/statistics.html', **locals())
 
 # render_template with multiple variables

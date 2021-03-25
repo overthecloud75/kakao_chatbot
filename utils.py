@@ -91,3 +91,11 @@ def calculate_accuracy(count, today_find):
             bay_accuracy[i] = int(bay_accuracy[i] / (count - no_decision) * 100)
     return count, unknown, no_decision, deep_accuracy, bay_accuracy
 
+def request_get(request_data, sort_type='timestamp'):
+    page = int(request_data.get('page', 1))
+    keyword = request_data.get('kw', None)
+    so = request_data.get('so', 'recent')
+    so_list= [(sort_type, -1)]
+    if so=='old' or so=='unpopular':
+        so_list = [(sort_type, 1)]
+    return page, keyword, so, so_list
