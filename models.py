@@ -100,16 +100,17 @@ def get_nlp_list(page=1, keyword=None):
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
     collection = db['nlp']
-    if keyword:
-        data_list = collection.find({'words':{'$regex':keyword}}).limit(per_page).skip(offset)
-    else:
+    print('keyword', keyword)
+    if keyword is None or keyword == '':
         data_list = collection.find().limit(per_page).skip(offset)
+    else:
+        data_list = collection.find({'words': {'$regex': keyword}}).limit(per_page).skip(offset)
     count = data_list.count()
     paging = paginate(page, per_page, count)
     return paging, data_list
 
 def get_word_list(page=1, sort=None, keyword=None):
-    if sort is None:
+    if sort is None or sort == '':
         sort = [('count', -1)]
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
@@ -122,7 +123,7 @@ def get_word_list(page=1, sort=None, keyword=None):
     index_word = data['index_word']
     if sort[0][1] == 1:
         index_word.reverse()
-    if keyword is None:
+    if keyword is None or keyword == '':
         count = len(index_word)
         index_word = index_word[offset:offset+per_page]
         for word in index_word:
@@ -133,7 +134,9 @@ def get_word_list(page=1, sort=None, keyword=None):
                 data_list.append({'word':word, 'count':word_count[word]})
         count = len(data_list)
         data_list[offset:offset+per_page]
+        print('len2', len(data_list))
     paging = paginate(page, per_page, count)
+    print(paging)
     return paging, data_list
 
 #monitoring_view.py
@@ -148,15 +151,15 @@ def get_category_list():
     return category_list
 
 def get_monitoring_data_list(page=1, sort=None, keyword=None):
-    if sort is None:
+    if sort is None or sort == '':
         sort = [('timestamp', -1)]
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
     collection = db['kakao']
-    if keyword:
-        data_list = collection.find({'msg':{'$regex':keyword}}, sort=sort).limit(per_page).skip(offset)
-    else:
+    if keyword is None or keyword == '':
         data_list = collection.find(sort=sort).limit(per_page).skip(offset)
+    else:
+        data_list = collection.find({'msg': {'$regex': keyword}}, sort=sort).limit(per_page).skip(offset)
     count = data_list.count()
     paging = paginate(page, per_page, count)
     return paging, data_list
@@ -166,7 +169,7 @@ def post_monitoring(timestamp=None, category=None):
     collection.update_one({'timestamp':timestamp}, {'$set': {'category':category}})
 
 def get_statistics_list(page=1, sort=None):
-    if sort is None:
+    if sort is None or sort == '':
         sort = [('date', -1)]
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
