@@ -44,7 +44,7 @@
             {{ form.csrf_token }}
             {% include "form_errors.html" %}
                 <input type="hidden" name="timestamp" value="{{ data.timestamp }}">
-                <td><input type="text" class="form-control" name="category" id="category" value="{{ data.deep[0][0] }}" size="40"></td>
+                <td><input type="text" class="form-control" name="category" value="{{ data.deep[0][0] }}" size="40"></td>
                 <td><input type="submit" class="btn btn-primary"></td>
             </form>
             <td>{{ data.category }}</td>

@@ -7,10 +7,11 @@
         {{ form.csrf_token }}
         {% include "form_errors.html" %}
         <div class="form-group">
-            <label for="msg">intent</label>
-            <input type="text" class="form-control" name="msg" id="msg">
+            <label for="intent">message</label>
+            <input type="text" class="form-control" name="intent" id="intent" value="{{ intent }}">
+            <input type="hidden" class="form-control" name="msg" id="msg" value="msg">
         </div>
-        <button type="submit" class="btn btn-primary">intent 등록</button>
+        <button type="submit" class="btn btn-primary">등록</button>
     </form>
     {% endif %}
 <table class="table">

@@ -17,6 +17,7 @@ class UserLoginForm(FlaskForm):
 
 class IntentMessageForm(FlaskForm):
     msg = StringField('msg', validators=[DataRequired(), Length(min=2, max=100)])
+    intent = StringField('intent', validators=[DataRequired(), Length(min=2, max=100)])
 
 class MonitoringForm(FlaskForm):
     timestamp = StringField('timestamp', validators=[DataRequired(), Length(min=2, max=100)])

@@ -1,4 +1,5 @@
 import datetime
+import copy
 from views.config import page_default
 from utils import calculate_accuracy, paginate
 from pymongo import MongoClient
@@ -79,7 +80,11 @@ def get_intent_data_list(intent, page=1):
 def post_intent(request_data):
     if 'msg' in request_data:
         collection = db['intent']
-        collection.update_one(request_data, {'$set':request_data}, upsert=True)
+        find_one = collection.find_one(request_data)
+        if find_one is None:
+            update = copy.deepcopy(request_data)
+            update['timestamp'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            collection.update_one({'msg':request_data['msg']}, {'$set':update}, upsert=True)
     else:
         collection = db['bayesian']
         data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
@@ -103,7 +108,7 @@ def get_nlp_list(page=1, keyword=None):
     paging = paginate(page, per_page, count)
     return paging, data_list
 
-def get_word_list(page=1, sort=None):
+def get_word_list(page=1, sort=None, keyword=None):
     if sort is None:
         sort = [('count', -1)]
     per_page = page_default['per_page']
@@ -114,13 +119,20 @@ def get_word_list(page=1, sort=None):
     collection = db['deep']
     data = collection.find_one(filter={'index_word': {'$exists': 'true'}})
     data_list = []
-    count = len(data['index_word'])
     index_word = data['index_word']
     if sort[0][1] == 1:
         index_word.reverse()
-    index_word = index_word[offset:offset+per_page]
-    for word in index_word:
-        data_list.append({'word':word, 'count':word_count[word]})
+    if keyword is None:
+        count = len(index_word)
+        index_word = index_word[offset:offset+per_page]
+        for word in index_word:
+            data_list.append({'word':word, 'count':word_count[word]})
+    else:
+        for word in index_word:
+            if keyword in word:
+                data_list.append({'word':word, 'count':word_count[word]})
+        count = len(data_list)
+        data_list[offset:offset+per_page]
     paging = paginate(page, per_page, count)
     return paging, data_list
 
@@ -158,9 +170,15 @@ def get_statistics_list(page=1, sort=None):
         sort = [('date', -1)]
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
-
     today = datetime.date.today()
-    while True:
+    # except weekend
+    if today.weekday() == 5:
+        today = today - datetime.timedelta(days=1)
+    elif today.weekday() == 6:
+        today = today - datetime.timedelta(days=2)
+
+    days = 1
+    while days < 7:  # to prevent a lot of accuracy calculation
         collection = db['kakao']
         str_today = str(today)
         today_find = collection.find({'timestamp':{'$regex':str_today}})
@@ -170,9 +188,15 @@ def get_statistics_list(page=1, sort=None):
             data = {'date':str_today, 'count':count, 'unknown':unknown, 'no_decision':no_decision, 'deep_accuracy':deep_accuracy, 'bay_accuracy':bay_accuracy}
             collection = db['statistics']
             collection.update_one({'date':str_today}, {'$set':data}, upsert=True)
-        else:
-            break
+            if no_decision:
+                days = 0
         today = today - datetime.timedelta(days=1)
+        # except weekend
+        if today.weekday() == 5:
+            today = today - datetime.timedelta(days=1)
+        elif today.weekday() == 6:
+            today = today - datetime.timedelta(days=2)
+        days = days + 1
     collection = db['statistics']
     count = collection.count()
     data_list = collection.find(sort=sort).limit(per_page).skip(offset)

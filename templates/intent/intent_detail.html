@@ -8,10 +8,11 @@
         {{ form.csrf_token }}
         {% include "form_errors.html" %}
         <div class="form-group">
+            <input type="hidden" class="form-control" name="intent" value="{{ intent }}">
             <label for="msg">message</label>
             <input type="text" class="form-control" name="msg" id="msg">
         </div>
-        <button type="submit" class="btn btn-primary">intent message 등록</button>
+        <button type="submit" class="btn btn-primary">등록</button>
     </form>
     {% endif %}
     <table class="table">
@@ -19,6 +20,10 @@
         <tr class="thead-dark">
             <th>번호</th>
             <th>message</th>
+            {% if g.user %}
+            <th>intent</th>
+            <th>수정</th>
+            {% endif %}
             <th>작성일시</th>
         </tr>
         </thead>
@@ -27,7 +32,16 @@
         <tr>
             <td>{{ paging.count - paging.offset - loop.index0 }}</td>
             <td>{{ intent.msg }}</td>
-            <td></td>
+            {% if g.user %}
+            <form method="post" class="my-3">
+                {{ form.csrf_token }}
+                {% include "form_errors.html" %}
+                <input type="hidden" name="msg" value="{{ intent.msg }}">
+                <td><input type="text" class="form-control" name="intent" value="{{ intent.intent }}" size="10"></td>
+                <td><input type="submit" class="btn btn-primary"></td>
+            </form>
+            <td>{{ intent.timestamp }}</td>
+            {% endif %}
         </tr>
         {% endfor %}
         {% else %}

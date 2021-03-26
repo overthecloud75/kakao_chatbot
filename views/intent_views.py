@@ -14,7 +14,7 @@ def _list():
     page, keyword, so, so_list = request_get(request.args) #, sort_type=sort_type)
     page = int(request.args.get('page', 1))
     if request.method == 'POST' and form.validate_on_submit():
-        intent = form.msg.data
+        intent = form.intent.data
         request_data = {'intent':intent}
         post_intent(request_data)
         global intent_list
@@ -27,7 +27,7 @@ def intent_detail(intent):
     form = IntentMessageForm()
     page = int(request.args.get('page', 1))
     if request.method == 'POST' and form.validate_on_submit():
-        request_data = {'msg':form.msg.data, 'intent':intent}
+        request_data = {'msg':form.msg.data, 'intent':form.intent.data}
         post_intent(request_data)
     paging, data_list = get_intent_data_list(intent, page=page)
     return render_template('intent/intent_detail.html', **locals())
@@ -42,6 +42,5 @@ def nlp():
 def word():
     sort_type = 'count'
     page, keyword, so, so_list = request_get(request.args, sort_type=sort_type)
-    print(so, so_list)
-    paging, data_list = get_word_list(page=page, sort=so_list)
+    paging, data_list = get_word_list(page=page, sort=so_list, keyword=keyword)
     return render_template('intent/word.html', **locals())
