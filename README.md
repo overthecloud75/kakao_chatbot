@@ -2,7 +2,7 @@
 ### 1. Result
 ### 2. Usage
 python chatbot.py<br>
-http://127.0.0.1:5000 <br>
+http://127.0.0.1:8080 <br>
 signup<br>
 login<br>
 menu intent -> add new intent<br>
