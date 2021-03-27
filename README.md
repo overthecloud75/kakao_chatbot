@@ -1,5 +1,6 @@
 # kakao_chatbot
 ### 1. Result
+![chatbot](https://user-images.githubusercontent.com/30888482/112711795-6878e680-8f0e-11eb-9d70-6358bcd3a3c5.PNG)
 ### 2. Usage
 python chatbot.py<br>
 http://127.0.0.1:8080 <br>
