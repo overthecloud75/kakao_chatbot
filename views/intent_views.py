@@ -1,35 +1,30 @@
 from flask import Blueprint, request, render_template
 from form import IntentMessageForm
-from models import get_intent_list, get_intent_paging, get_intent_data_list, post_intent, get_nlp_list, get_word_list
+from models import get_intent_paging, get_intent_data_list, post_intent, get_nlp_list, get_word_list
 from utils import request_get
-
-intent_list = get_intent_list()
 
 bp = Blueprint('intent', __name__, url_prefix='/intent')
 
 @bp.route('/', methods=('GET', 'POST'))
 def _list():
     form = IntentMessageForm()
-    # sort_type = 'count'
-    page, keyword, so, so_list = request_get(request.args) #, sort_type=sort_type)
-    page = int(request.args.get('page', 1))
+    sort_type = 'count'
+    page, keyword, so, so_list = request_get(request.args, sort_type=sort_type)
     if request.method == 'POST' and form.validate_on_submit():
         intent = form.intent.data
         request_data = {'intent':intent}
         post_intent(request_data)
-        global intent_list
-        intent_list = get_intent_list()
-    paging, data_list = get_intent_paging(intent_list, page=page, sort=so_list)
+    paging, data_list = get_intent_paging(page=page, sort=so_list, keyword=keyword)
     return render_template('intent/intent_list.html', **locals())
 
 @bp.route('/<intent>/', methods=('GET', 'POST'))
 def intent_detail(intent):
     form = IntentMessageForm()
-    page = int(request.args.get('page', 1))
+    page, keyword, so, so_list = request_get(request.args)
     if request.method == 'POST' and form.validate_on_submit():
         request_data = {'msg':form.msg.data, 'intent':form.intent.data}
         post_intent(request_data)
-    paging, data_list = get_intent_data_list(intent, page=page)
+    paging, data_list = get_intent_data_list(intent, page=page, keyword=keyword)
     return render_template('intent/intent_detail.html', **locals())
 
 @bp.route('/nlp/')

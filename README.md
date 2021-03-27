@@ -1,6 +1,14 @@
 # kakao_chatbot
 ### 1. Result
 ### 2. Usage
+python chatbot.py<br>
+http://127.0.0.1:5000 <br>
+signup<br>
+login<br>
+menu intent -> add new intent<br>
+click added intent -> add new message<br>
+python kon.py (learning)<br>
+restart python chatbot.py
 ### 3. Acknowlegements
 this implremenation has been tested with Python 3.7.9 and tensorflow 2.4.0
 ### 4. References

@@ -15,6 +15,7 @@
         <button type="submit" class="btn btn-primary">등록</button>
     </form>
     {% endif %}
+    {% include 'search.html' %}
     <table class="table">
         <thead>
         <tr class="thead-dark">
@@ -24,7 +25,7 @@
             <th>intent</th>
             <th>수정</th>
             {% endif %}
-            <th>작성일시</th>
+            <th>timestamp</th>
         </tr>
         </thead>
         {% if data_list %}
@@ -40,8 +41,8 @@
                 <td><input type="text" class="form-control" name="intent" value="{{ intent.intent }}" size="10"></td>
                 <td><input type="submit" class="btn btn-primary"></td>
             </form>
-            <td>{{ intent.timestamp }}</td>
             {% endif %}
+            <td>{{ intent.timestamp }}</td>
         </tr>
         {% endfor %}
         {% else %}

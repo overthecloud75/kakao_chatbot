@@ -11,25 +11,46 @@ db = mongoClient['chatbot']
 def set_baysien():
     collection = db['bayesian']
 
-    data = collection.find_one(filter={'words': {'$exists': 'true'}})
-    words = data['words']
+    words = []
+    data_list = collection.find({'type':'words'})
+    for data in data_list:
+        words.append(data['word'])
+
+    #data = collection.find_one(filter={'words': {'$exists': 'true'}})
+    #words = data['words']
     data = collection.find_one(filter={'word_dict': {'$exists': 'true'}})
     word_dict = data['word_dict']
-    data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
-    category_dict = data['category_dict']
-    data = collection.find_one(filter={'word_count': {'$exists': 'true'}})
-    word_count = data['word_count']
+
+    category_dict = {}
+    data_list = collection.find({'type':'category'})
+    for data in data_list:
+        category_dict[data['category']] = data['count']
+
+    word_count = {}
+    data_list = collection.find({'type':'word_count'})
+    for data in data_list:
+        word_count[data['word']] = data['count']
+
+    #data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
+    #category_dict = data['category_dict']
+    #data = collection.find_one(filter={'word_count': {'$exists': 'true'}})
+    #word_count = data['word_count']
     return words, word_dict, category_dict, word_count
 
 # api_views.py
 def set_deep():
     collection = db['deep']
 
-    data = collection.find_one(filter={'word_index': {'$exists': 'true'}})
-    word_index = data['word_index']
-    data = collection.find_one(filter={'idx_label': {'$exists': 'true'}})
-    idx_label = data['idx_label']
-    data = collection.find_one(filter={'max_len_list': {'$exists': 'true'}})
+    word_index = {}
+    data_list = collection.find({'type':'word_index'})
+    for data in data_list:
+        word_index[data['word']] = data['idx']
+    idx_label = {}
+    data_list = collection.find({'type':'idx_label'})
+    for data in data_list:
+        idx_label[data['idx']] = data['label']
+
+    data = collection.find_one(filter={'max_len_list':{'$exists':'true'}})
     max_len = data['max_len_list'][0]
     return word_index, idx_label, max_len
 
@@ -46,65 +67,63 @@ def kakaoWrite(msg, spacetext, corpus, words, deepScore, bayScore):
     collection.insert(data)
 
 # intent_view.py
-def get_intent_list():
-    collection = db['bayesian']
-    data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
-    category_dict = data['category_dict']
-
-    intent_list = []
-    for key in category_dict:
-        intent = {'intent':key, 'count':category_dict[key]}
-        intent_list.append(intent)
-    return intent_list
-
-def get_intent_paging(intent_list, page=1, sort=None):
+def get_intent_paging(page=1, sort=None, keyword=None):
+    if sort is None or sort == '':
+        sort = [('count', -1)]
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
-    count = len(intent_list)
+    collection = db['bayesian']
+    if keyword is None or keyword == '':
+        data_list = collection.find({'type':'intent'}, sort=sort)
+    else:
+        data_list = collection.find({'type':'intent', 'intent':{'$regex':keyword}}, sort=sort)
+    count = data_list.count()
+    data_list = data_list.limit(per_page).skip(offset)
     paging = paginate(page, per_page, count)
-    data_list = intent_list[offset:offset + per_page]
     return paging, data_list
 
-def get_intent_data_list(intent, page=1):
+def get_intent_data_list(intent, page=1, keyword=None):
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
     collection = db['intent']
-    data_list = collection.find(
-        filter={'intent':intent}
-    )
+    if  keyword is None or keyword == '':
+        data_list = collection.find({'intent':intent})
+    else:
+        data_list = collection.find({'intent':intent, 'msg':{'$regex':keyword}})
     count = data_list.count()
     data_list = data_list.limit(per_page).skip(offset)
     paging = paginate(page, per_page, count)
     return paging, data_list
 
 def post_intent(request_data):
+    intent = request_data['intent']
     if 'msg' in request_data:
         collection = db['intent']
-        find_one = collection.find_one(request_data)
-        if find_one is None:
+        data = collection.find_one(request_data)
+
+        if data is None:
             update = copy.deepcopy(request_data)
             update['timestamp'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            collection.update_one({'msg':request_data['msg']}, {'$set':update}, upsert=True)
+            collection.update_one({'msg':request_data['msg']},{'$set':update}, upsert=True)
+            count = collection.find({'intent':intent}).count()
+            collection = db['bayesian']
+            update = {'count':count}
+            collection.update_one({'type':'intent', 'intent':intent}, {'$set':update}, upsert=True)
     else:
         collection = db['bayesian']
-        data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
-        category_dict = data['category_dict']
-        intent = request_data['intent']
-        if request_data['intent'] in category_dict:
-            pass
-        else:
-            category_dict[intent] = 0
-            collection.update_one({'category_dict': {'$exists': 'true'}}, {'$set': {'category_dict' : category_dict}}, upsert=True)
+        data = collection.find_one({'type':'intent', 'intent':intent})
+        if data is None:
+            insert = {'type':'intent', 'intent':intent, 'count':0, 'timestamp':datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            collection.insert_one(insert)
 
 def get_nlp_list(page=1, keyword=None):
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
     collection = db['nlp']
-    print('keyword', keyword)
     if keyword is None or keyword == '':
         data_list = collection.find().limit(per_page).skip(offset)
     else:
-        data_list = collection.find({'words': {'$regex': keyword}}).limit(per_page).skip(offset)
+        data_list = collection.find({'words':{'$regex':keyword}}).limit(per_page).skip(offset)
     count = data_list.count()
     paging = paginate(page, per_page, count)
     return paging, data_list
@@ -115,39 +134,21 @@ def get_word_list(page=1, sort=None, keyword=None):
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
     collection = db['bayesian']
-    data = collection.find_one(filter={'word_count': {'$exists': 'true'}}, )
-    word_count = data['word_count']
-    collection = db['deep']
-    data = collection.find_one(filter={'index_word': {'$exists': 'true'}})
-    data_list = []
-    index_word = data['index_word']
-    if sort[0][1] == 1:
-        index_word.reverse()
     if keyword is None or keyword == '':
-        count = len(index_word)
-        index_word = index_word[offset:offset+per_page]
-        for word in index_word:
-            data_list.append({'word':word, 'count':word_count[word]})
+        data_list = collection.find({'type':'word_count'}, sort=sort).limit(per_page).skip(offset)
     else:
-        for word in index_word:
-            if keyword in word:
-                data_list.append({'word':word, 'count':word_count[word]})
-        count = len(data_list)
-        data_list[offset:offset+per_page]
-        print('len2', len(data_list))
+        data_list = collection.find({'type':'word_count', 'word':{'$regex': keyword}}, sort=sort).limit(per_page).skip(offset)
+    count = data_list.count()
     paging = paginate(page, per_page, count)
-    print(paging)
     return paging, data_list
 
 #monitoring_view.py
 def get_category_list():
     collection = db['bayesian']
-    data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
-    category_dict = data['category_dict']
-
     category_list = []
-    for key in category_dict:
-        category_list.append(key)
+    data_list = collection.find({'type':'intent'})
+    for data in data_list:
+        category_list.append(data['intent'])
     return category_list
 
 def get_monitoring_data_list(page=1, sort=None, keyword=None):
@@ -159,14 +160,14 @@ def get_monitoring_data_list(page=1, sort=None, keyword=None):
     if keyword is None or keyword == '':
         data_list = collection.find(sort=sort).limit(per_page).skip(offset)
     else:
-        data_list = collection.find({'msg': {'$regex': keyword}}, sort=sort).limit(per_page).skip(offset)
+        data_list = collection.find({'msg':{'$regex':keyword}}, sort=sort).limit(per_page).skip(offset)
     count = data_list.count()
     paging = paginate(page, per_page, count)
     return paging, data_list
 
 def post_monitoring(timestamp=None, category=None):
     collection = db['kakao']
-    collection.update_one({'timestamp':timestamp}, {'$set': {'category':category}})
+    collection.update_one({'timestamp':timestamp}, {'$set':{'category':category}})
 
 def get_statistics_list(page=1, sort=None):
     if sort is None or sort == '':

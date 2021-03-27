@@ -7,13 +7,14 @@
         {{ form.csrf_token }}
         {% include "form_errors.html" %}
         <div class="form-group">
-            <label for="intent">message</label>
+            <label for="intent">intent</label>
             <input type="text" class="form-control" name="intent" id="intent" value="{{ intent }}">
             <input type="hidden" class="form-control" name="msg" id="msg" value="msg">
         </div>
         <button type="submit" class="btn btn-primary">등록</button>
     </form>
     {% endif %}
+    {% include 'search.html' %}
 <table class="table">
     {% if data_list %}
         <thead>
@@ -21,12 +22,14 @@
             <th>번호</th>
             <th>intent</th>
             <th>count</th>
+            <th>timestamp</th>
         </tr>
         {% for intent in data_list %}
         <tr>
             <td>{{ paging.count - paging.offset - loop.index0 }}</td>
             <td><a href="{{ url_for('intent.intent_detail', intent=intent.intent) }}">{{ intent.intent }}</a></td>
             <td>{{ intent.count }}</td>
+            <td>{{ intent.timestamp }}</td>
         </tr>
         {% endfor %}
     {% else %}

@@ -8,8 +8,4 @@ raw_image/
 views/__pycache__
 views/category_config.py
 predictions/intent.h5
-custom_vocab.txt
-split.txt
-stopwords.txt
-synonym.txt
 kakao_chatbot.pptx

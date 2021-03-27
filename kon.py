@@ -25,12 +25,13 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
 
     if not para:
         collection = db['intent']
-        finds = collection.find(filter={})
+        data_list = collection.find()
         total = collection.count_documents({})
+        db.drop_collection('nlp')
         collection = db['nlp']
-        for find in finds:
-            msg = find['msg']
-            intent = find['intent']
+        for data in data_list:
+            msg = data['msg']
+            intent = data['intent']
             if intent in label_idx:
                 idx = label_idx[intent]
                 label_train.append(idx)
@@ -44,27 +45,32 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
 
             spacetext, corpus, words = preProcessing.split(msg)
             filter.fit(words, intent)
-            update = {'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            update = {'timestamp':datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                       'msg':msg,
                       'spacetext':spacetext,
                       'corpus':corpus,
                       'words': words,
                       'intent':intent}
-            collection.update_one({'msg':msg}, {'$set': update}, upsert=True)
+            collection.update_one({'msg':msg}, {'$set':update}, upsert=True)
             intent_train.append(words)
 
         print(filter.category_dict)
        # parameter 저장
+        db.drop_collection('bayesian')
         collection = db['bayesian']
 
-        update = {'words': list(filter.words)}
-        collection.update_one({'words':{'$exists':'true'}}, {'$set': update}, upsert=True)
+        for word in list(filter.words):
+            update = {'type':'words', 'word':word}
+            collection.update_one({'type':'words', 'word':word}, {'$set': update}, upsert=True)
         update = {'word_dict': filter.word_dict}
         collection.update_one({'word_dict':{'$exists':'true'}}, {'$set': update}, upsert=True)
-        update = {'category_dict': filter.category_dict}
-        collection.update_one({'category_dict':{'$exists':'true'}}, {'$set': update}, upsert=True)
-        update = {'word_count': filter.get_total_word_count()}
-        collection.update_one({'word_count':{'$exists':'true'}}, {'$set': update}, upsert=True)
+        for key in filter.category_dict:
+            update = {'type':'intent', 'intent':key, 'count':filter.category_dict[key]}
+            collection.update_one({'type':'intent', 'intent':key}, {'$set': update}, upsert=True)
+        word_count = filter.get_total_word_count()
+        for key in word_count:
+            update = {'type':'word_count', 'word':key, 'count':word_count[key]}
+            collection.update_one({'type':'category', 'word':key}, {'$set': update}, upsert=True)
 
         pre1 = 0
         pre2 = 0
@@ -88,17 +94,19 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
     return intent_train, label_train, label_idx, idx_label
 
 def deepModelParaSave(word_index, index_words, idx_label, max_len_list):
+    # How to drop a collection with pymongo?
+    # https://stackoverflow.com/questions/48923682/how-to-drop-a-collection-with-pymongo
     # parameter 저장
+    db.drop_collection('deep')
     collection = db['deep']
-
-    update = {'word_index': word_index}
-    collection.update_one({'word_index': {'$exists': 'true'}}, {'$set': update}, upsert=True)
-    update = {'index_word': index_words}
-    collection.update_one({'index_word': {'$exists': 'true'}}, {'$set': update}, upsert=True)
-    update = {'idx_label': idx_label}
-    collection.update_one({'idx_label': {'$exists': 'true'}}, {'$set': update}, upsert=True)
+    for word in word_index:
+        update = {'type':'word_index', 'word':word, 'idx':word_index[word]}
+        collection.update_one({'type':'word_index', 'word':word}, {'$set': update}, upsert=True)
+    for word in idx_label:
+        update = {'type':'idx_label', 'idx':word, 'label':idx_label[word]}
+        collection.update_one({'type':'idx_label', 'idx':word}, {'$set': update}, upsert=True)
     update = {'max_len_list': max_len_list}
-    collection.update_one({'max_len_list': {'$exists': 'true'}}, {'$set': update}, upsert=True)
+    collection.update_one({'max_len_list': {'$exists':'true'}}, {'$set':update}, upsert=True)
 
 if __name__ == '__main__' :
 

@@ -94,8 +94,13 @@ def calculate_accuracy(count, today_find):
 def request_get(request_data, sort_type='timestamp'):
     page = int(request_data.get('page', 1))
     keyword = request_data.get('kw', None)
+    if keyword == '?':
+        keyword = '\?'
+    # pymongo.errors.OperationFailure: Regular expression is invalid
+    # https://stackoverflow.com/questions/43171401/invalid-regular-expression-nothing-to-repeat-error
     so = request_data.get('so', 'recent')
     so_list= [(sort_type, -1)]
     if so=='old' or so=='unpopular':
         so_list = [(sort_type, 1)]
+    print(so)
     return page, keyword, so, so_list

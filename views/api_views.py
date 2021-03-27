@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request, current_app
-import json
 import time
 import threading
 

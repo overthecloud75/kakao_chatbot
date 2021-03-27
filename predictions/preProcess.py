@@ -14,37 +14,26 @@ eng = re.compile('[a-zA-Z]+')
 twitter = Okt()
 
 def openText():
-    with open('synonym.txt', 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        synonym = {}
-        for line in lines:
-            line = line.split(',')
-            line[1] = line[1].strip()
-            synonym[line[0]] = line[1]
+    collection = db['preprocess']
+    synonym = {}
+    data_list = collection.find({'type':'synonym'})
+    for data in data_list:
+        synonym[data['word']] = data['sub']
 
-    with open('stopwords.txt', 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        stopwords = []
-        for line in lines:
-            line = line.split(',')
-            line[0] = line[0].strip()
-            stopwords.append(line[0])
+    stopwords = []
+    data_list = collection.find({'type':'stopwords'})
+    for data in data_list:
+        stopwords.append(data['word'])
 
-    with open('custom_vocab.txt', 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        custom_vocab = []
-        for line in lines:
-            line = line.split(',')
-            line[0] = line[0].strip()
-            custom_vocab.append(line[0])
+    custom_vocab = []
+    data_list = collection.find({'type':'custom_vocab'})
+    for data in data_list:
+        custom_vocab.append(data['word'])
 
-    with open('split.txt', 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-        split_words = {}
-        for line in lines:
-            line = line.split(',')
-            line[1] = line[1].strip()
-            split_words[line[0]] = line[1]
+    split_words = {}
+    data_list = collection.find({'type':'split'})
+    for data in data_list:
+        split_words[data['word']] = data['sub']
     return synonym, stopwords, custom_vocab, split_words
 
 class PreProcess:
@@ -56,8 +45,11 @@ class PreProcess:
         self.synonym, self.stopwords, self.custom_vocab, self.split_words = openText()
         if para:
             collection = db['bayesian']
-            data = collection.find_one(filter={'word_count': {'$exists': 'true'}})
-            self.word_count = data['word_count']
+            word_count = {}
+            data_list = collection.find({'type':'word_count'})
+            for data in data_list:
+                word_count[data['word']] = data['count']
+            self.word_count = word_count
         else:
             self.word_count = {}
 
