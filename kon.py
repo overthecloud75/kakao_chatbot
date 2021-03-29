@@ -61,16 +61,16 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
 
         for word in list(filter.words):
             update = {'type':'words', 'word':word}
-            collection.update_one({'type':'words', 'word':word}, {'$set': update}, upsert=True)
+            collection.update_one({'type':'words', 'word':word}, {'$set':update}, upsert=True)
         update = {'word_dict': filter.word_dict}
-        collection.update_one({'word_dict':{'$exists':'true'}}, {'$set': update}, upsert=True)
+        collection.update_one({'word_dict':{'$exists':'true'}}, {'$set':update}, upsert=True)
         for key in filter.category_dict:
             update = {'type':'intent', 'intent':key, 'count':filter.category_dict[key]}
-            collection.update_one({'type':'intent', 'intent':key}, {'$set': update}, upsert=True)
+            collection.update_one({'type':'intent', 'intent':key}, {'$set':update}, upsert=True)
         word_count = filter.get_total_word_count()
         for key in word_count:
             update = {'type':'word_count', 'word':key, 'count':word_count[key]}
-            collection.update_one({'type':'category', 'word':key}, {'$set': update}, upsert=True)
+            collection.update_one({'type':'category', 'word':key}, {'$set':update}, upsert=True)
 
         pre1 = 0
         pre2 = 0

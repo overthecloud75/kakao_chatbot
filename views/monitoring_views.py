@@ -1,7 +1,7 @@
-from flask import Blueprint, request, render_template, url_for, current_app, session, g, flash, send_file, send_from_directory
+from flask import Blueprint, request, render_template, url_for, g, flash
 from werkzeug.utils import redirect
 from form import MonitoringForm
-from models import get_category_list, get_monitoring_data_list, post_monitoring, get_statistics_list
+from models import get_category_list, get_monitoring_data_list, post_monitoring, get_nlp_list, get_statistics_list
 from utils import request_get
 import functools
 
@@ -31,6 +31,12 @@ def monitoring():
             post_monitoring(timestamp=form.timestamp.data, category=category)
     paging, data_list = get_monitoring_data_list(page=page, sort=so_list, keyword=keyword)
     return render_template('monitoring/monitoring.html', **locals())
+
+@bp.route('/nlp/')
+def nlp():
+    page, keyword, so, so_list = request_get(request.args)
+    paging, data_list = get_nlp_list(page=page, keyword=keyword)
+    return render_template('monitoring/nlp.html', **locals())
 
 @bp.route('/statistics/', methods=('GET', 'POST'))
 @login_required

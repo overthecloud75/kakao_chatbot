@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-3">
+<table class="table">
+    {% if word %}
+        <thead>
+        <tr class="thead-dark">
+            <th>word</th>
+            <th>type</th>
+            <th>sub</th>
+            <th>확인</th>
+        </tr>
+        <tr>
+            <form method="post" class="my-3">
+                {{ form.csrf_token }}
+                {% include "form_errors.html" %}
+                <td>{{ word }}</td>
+                <td>
+                    synonym <input type="radio" name="type" value="synonym" checked />
+                    stopwords <input type="radio" name="type" value="stopwords" />
+                    split <input type="radio" name="type" value="split" />
+                </td>
+                <td><input type="text" class="form-control" name="sub" value="" size="10"></td>
+                <td><input type="submit" class="btn btn-primary"></td>
+            </form>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="3">there is no word.</td>
+        </tr>
+{% endif %}
+</table>
+</div>
+{% endblock %}

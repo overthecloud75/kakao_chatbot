@@ -11,12 +11,14 @@
         <tr class="thead-dark">
             <th>번호</th>
             <th>word</th>
+            <th>synonym</th>
             <th>count</th>
         </tr>
         {% for intent in data_list %}
         <tr>
             <td>{{ paging.count - paging.offset - loop.index0 }}</td>
-            <td><a href="{{ url_for('intent.nlp', kw=intent.word) }}">{{ intent.word }}</a></td>
+            <td><a href="{{ url_for('word.pre_word', word=intent.word) }}">{{ intent.word }}</a></td>
+            <td>{{ synonym[intent.word] }}</td>
             <td>{{ intent.count }}</td>
         </tr>
         {% endfor %}

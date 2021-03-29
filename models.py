@@ -15,26 +15,18 @@ def set_baysien():
     data_list = collection.find({'type':'words'})
     for data in data_list:
         words.append(data['word'])
-
-    #data = collection.find_one(filter={'words': {'$exists': 'true'}})
-    #words = data['words']
     data = collection.find_one(filter={'word_dict': {'$exists': 'true'}})
     word_dict = data['word_dict']
 
     category_dict = {}
-    data_list = collection.find({'type':'category'})
+    data_list = collection.find({'type':'intent'})
     for data in data_list:
-        category_dict[data['category']] = data['count']
+        category_dict[data['intent']] = data['count']
 
     word_count = {}
     data_list = collection.find({'type':'word_count'})
     for data in data_list:
         word_count[data['word']] = data['count']
-
-    #data = collection.find_one(filter={'category_dict': {'$exists': 'true'}})
-    #category_dict = data['category_dict']
-    #data = collection.find_one(filter={'word_count': {'$exists': 'true'}})
-    #word_count = data['word_count']
     return words, word_dict, category_dict, word_count
 
 # api_views.py
@@ -116,6 +108,15 @@ def post_intent(request_data):
             insert = {'type':'intent', 'intent':intent, 'count':0, 'timestamp':datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             collection.insert_one(insert)
 
+#monitoring_view.py
+def get_category_list():
+    collection = db['bayesian']
+    category_list = []
+    data_list = collection.find({'type':'intent'})
+    for data in data_list:
+        category_list.append(data['intent'])
+    return category_list
+
 def get_nlp_list(page=1, keyword=None):
     per_page = page_default['per_page']
     offset = (page - 1) * per_page
@@ -127,29 +128,6 @@ def get_nlp_list(page=1, keyword=None):
     count = data_list.count()
     paging = paginate(page, per_page, count)
     return paging, data_list
-
-def get_word_list(page=1, sort=None, keyword=None):
-    if sort is None or sort == '':
-        sort = [('count', -1)]
-    per_page = page_default['per_page']
-    offset = (page - 1) * per_page
-    collection = db['bayesian']
-    if keyword is None or keyword == '':
-        data_list = collection.find({'type':'word_count'}, sort=sort).limit(per_page).skip(offset)
-    else:
-        data_list = collection.find({'type':'word_count', 'word':{'$regex': keyword}}, sort=sort).limit(per_page).skip(offset)
-    count = data_list.count()
-    paging = paginate(page, per_page, count)
-    return paging, data_list
-
-#monitoring_view.py
-def get_category_list():
-    collection = db['bayesian']
-    category_list = []
-    data_list = collection.find({'type':'intent'})
-    for data in data_list:
-        category_list.append(data['intent'])
-    return category_list
 
 def get_monitoring_data_list(page=1, sort=None, keyword=None):
     if sort is None or sort == '':
@@ -207,3 +185,64 @@ def get_statistics_list(page=1, sort=None):
     paging = paginate(page, per_page, count)
     return paging, data_list
 
+# word_view
+def get_word_list(page=1, sort=None, keyword=None):
+    if sort is None or sort == '':
+        sort = [('count', -1)]
+    per_page = page_default['per_page']
+    offset = (page - 1) * per_page
+    collection = db['bayesian']
+    if keyword is None or keyword == '':
+        data_list = collection.find({'type':'word_count'}, sort=sort).limit(per_page).skip(offset)
+    else:
+        data_list = collection.find({'type':'word_count', 'word':{'$regex':keyword}}, sort=sort).limit(per_page).skip(offset)
+    count = data_list.count()
+    paging = paginate(page, per_page, count)
+    return paging, data_list
+
+def get_word_synonym():
+    collection = db['preprocess']
+    synonym = {}
+    data_list = collection.find({'type':'synonym'})
+    for data in data_list:
+        if data['sub'] in synonym:
+            synonym[data['sub']].append(data['word'])
+        else:
+            synonym[data['sub']] = [data['word']]
+    return synonym
+
+def post_pre_word(request_data):
+    type = request_data['type']
+    word = request_data['word']
+    sub = request_data['sub']
+    collection = db['preprocess']
+    bayesianUpdate = False
+    if type == 'synonym' and sub != '':
+        collection.update_one({'type':type, 'word':word}, {'$set':{'type':type, 'word':word, 'sub':sub}}, upsert=True)
+        bayesianUpdate = True
+    elif type == 'stopwords':
+        collection.update_one({'type':type, 'word':word}, {'$set':{'type':type, 'word':word}}, upsert=True)
+        bayesianUpdate = True
+    elif type == 'split' and word in sub:
+        collection.update_one({'type':type, 'word':word}, {'$set':{'type':type, 'word':word, 'sub':sub}}, upsert=True)
+    # word_count에 있는 word를 삭제하고 sub쪽에 단어를 증가
+    if bayesianUpdate:
+        collection = db['bayesian']
+        word_count = collection.find_one({'type':'word_count', 'word':word})
+        count = 0
+        if word_count:
+            count = word_count['count']
+            collection.delete_one({'type':'word_count', 'word':word})
+
+        sub_split = sub.split(' ')
+        if len(sub.split(' ')) > 1:
+            for sub in sub_split:
+                sub_count = collection.find_one({'type':'word_count', 'word':sub})
+                if sub_count:
+                    count = sub_count['count'] + count
+                    collection.update_one({'type':'word_count', 'word':sub}, {'$set':{'count':count}})
+        else:
+            sub_count = collection.find_one({'type':'word_count', 'word':sub})
+            if sub_count:
+                count = sub_count['count'] + count
+                collection.update_one({'type':'word_count', 'word':sub}, {'$set':{'count':count}})

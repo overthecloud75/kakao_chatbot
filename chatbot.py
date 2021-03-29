@@ -19,10 +19,11 @@ def create_app():
     app.logger.addHandler(handler)
     app.logger.setLevel(logging.DEBUG)
 
-    from views import main_views, intent_views, monitoring_views, api_views
+    from views import main_views, intent_views, monitoring_views, word_views, api_views
     app.register_blueprint(main_views.bp)
     app.register_blueprint(intent_views.bp)
     app.register_blueprint(monitoring_views.bp)
+    app.register_blueprint(word_views.bp)
     app.register_blueprint(api_views.bp)
 
     return app

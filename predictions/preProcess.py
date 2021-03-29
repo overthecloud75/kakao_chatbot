@@ -19,7 +19,6 @@ def openText():
     data_list = collection.find({'type':'synonym'})
     for data in data_list:
         synonym[data['word']] = data['sub']
-
     stopwords = []
     data_list = collection.find({'type':'stopwords'})
     for data in data_list:

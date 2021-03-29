@@ -33,10 +33,14 @@
             {% else %}
             <td>{{ data.deep[0][0] }} / {{ data.deep[1][0] }} / {{ data.deep[2][0] }}</td>
             {% endif %}
+            {% if data.bay %}
             {% if data.category and data.category != data.bay[0][0] %}
             <td style="color:red">{{ data.bay[0][0] }} / {{ data.bay[1][0] }} / {{data.bay[2][0] }}</td>
             {% else %}
             <td>{{ data.bay[0][0] }} / {{ data.bay[1][0] }} / {{data.bay[2][0] }}</td>
+            {% endif %}
+            {% else %}
+            <td></td>
             {% endif %}
             <td>{{ data.timestamp }}</td>
             {% if not data.category and g.user %}

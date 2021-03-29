@@ -67,6 +67,7 @@ def calculate_accuracy(count, today_find):
     bay_accuracy = [0, 0, 0]
     unknown = 0
     no_decision = 0
+    no_bay = 0
     for data in today_find:
         deep = data['deep']
         bay = data['bay']
@@ -74,21 +75,24 @@ def calculate_accuracy(count, today_find):
             category = data['category']
             if category == 'unknown':
                 unknown = unknown + 1
+            if not bay:
+                no_bay = no_bay + 1
             for i in range(3):
                 if deep[i][0] == category:
                     for k in range(3):
                         if k >= i:
                             deep_accuracy[k] = deep_accuracy[k] + 1
-                if bay[i][0] == category:
-                    for k in range(3):
-                        if k >= i:
-                            bay_accuracy[k] = bay_accuracy[k] + 1
+                if bay:
+                    if bay[i][0] == category:
+                        for k in range(3):
+                            if k >= i:
+                                bay_accuracy[k] = bay_accuracy[k] + 1
         else:
             no_decision = no_decision + 1
     if count - no_decision:
         for i in range(3):
             deep_accuracy[i] = int(deep_accuracy[i] / (count - no_decision) * 100)
-            bay_accuracy[i] = int(bay_accuracy[i] / (count - no_decision) * 100)
+            bay_accuracy[i] = int(bay_accuracy[i] / (count - no_decision - no_bay) * 100)
     return count, unknown, no_decision, deep_accuracy, bay_accuracy
 
 def request_get(request_data, sort_type='timestamp'):
@@ -102,5 +106,4 @@ def request_get(request_data, sort_type='timestamp'):
     so_list= [(sort_type, -1)]
     if so=='old' or so=='unpopular':
         so_list = [(sort_type, 1)]
-    print(so)
     return page, keyword, so, so_list
