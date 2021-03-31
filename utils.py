@@ -26,7 +26,7 @@ def paginate(page, per_page, count):
     elif page > total_pages:
         page = total_pages
 
-    start_page = page // screen_pages * screen_pages + 1
+    start_page = (page - 1) // screen_pages * screen_pages + 1
 
     pages = []
     prev_num = start_page - screen_pages
