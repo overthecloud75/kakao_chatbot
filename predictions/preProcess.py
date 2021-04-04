@@ -115,8 +115,8 @@ class PreProcess:
             for i in range(len_result):
                 if add > 0:
                     add = add - 1
-                elif i < len_result - 1 and results[i] + results[i + 1] in self.custom_vocab:
-                    word = results[i] + results[i + 1]
+                elif i < len_result - 3 and results[i] + results[i + 1] + results[i + 2] + results[i + 3] in self.custom_vocab:
+                    word = results[i] + results[i + 1] + results[i + 2] + results[i + 3]
                     if word in self.synonym:
                         word = self.synonym[word]
                     if self.para and word not in self.word_count and word not in self.synonym:
@@ -126,7 +126,7 @@ class PreProcess:
                         pass
                     else:
                         new_results.append(word)
-                    add = 1
+                    add = 3
                 elif i < len_result - 2 and results[i] + results[i + 1] + results[i + 2] in self.custom_vocab:
                     word = results[i] + results[i + 1] + results[i + 2]
                     if word in self.synonym:
@@ -139,9 +139,8 @@ class PreProcess:
                     else:
                         new_results.append(word)
                     add = 2
-                elif i < len_result - 3 and results[i] + results[i + 1] + results[i + 2] + results[
-                    i + 3] in self.custom_vocab:
-                    word = results[i] + results[i + 1] + results[i + 2] + results[i + 3]
+                elif i < len_result - 1 and results[i] + results[i + 1] in self.custom_vocab:
+                    word = results[i] + results[i + 1]
                     if word in self.synonym:
                         word = self.synonym[word]
                     if self.para and word not in self.word_count and word not in self.synonym:
@@ -151,7 +150,7 @@ class PreProcess:
                         pass
                     else:
                         new_results.append(word)
-                    add = 3
+                    add = 1
                 else:
                     word = results[i]
                     if word in self.synonym:

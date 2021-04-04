@@ -1,15 +1,10 @@
 from flask import Blueprint, request, render_template, url_for, session, g, flash
-from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash
 from werkzeug.utils import redirect
 import functools
-from datetime import datetime
 
 from form import UserCreateForm, UserLoginForm
-
-# database
-from pymongo import MongoClient
-mongoClient = MongoClient('mongodb://localhost:27017/')
-db = mongoClient['chatbot']
+from models import post_sign_up, post_login
 
 def login_required(view):
     @functools.wraps(view)
@@ -30,24 +25,11 @@ def index():
 def signup():
     form = UserCreateForm()
     if request.method == 'POST' and form.validate_on_submit():
-        request_data = {'group': form.group.data,  'name': form.name.data, 'email': form.email.data, 'password': generate_password_hash(form.password1.data)}
-        collection = db['users']
-        user_data = collection.find_one(filter={'email': request_data['email']})
-        if user_data:
+        request_data = {'name': form.name.data, 'email': form.email.data, 'password': generate_password_hash(form.password1.data)}
+        error = post_sign_up(request_data)
+        if error:
             flash('이미 존재하는 사용자입니다.')
         else:
-            user_data = collection.find_one(filter={'group': request_data['group']})
-            request_data['admin'] = False
-            if user_data is None:
-                request_data['admin'] = True
-            user_data = collection.find_one(sort=[('create_time', -1)])
-            if user_data:
-                user_id = user_data['user_id'] + 1
-            else:
-                user_id = 1
-            request_data['create_time'] = str(datetime.now())
-            request_data['user_id'] = user_id
-            collection.insert(request_data)
             return redirect(url_for('main.index'))
     return render_template('account/signup.html', form=form)
 
@@ -55,14 +37,8 @@ def signup():
 def login():
     form = UserLoginForm()
     if request.method == 'POST' and form.validate_on_submit():
-        error = None
         request_data = {'email': form.email.data, 'password': form.password.data}
-        collection = db['users']
-        user_data = collection.find_one(filter={'email': request_data['email']})
-        if not user_data:
-            error = "존재하지 않는 사용자입니다."
-        elif not check_password_hash(user_data['password'], request_data['password']):
-            error = "비밀번호가 올바르지 않습니다."
+        error, user_data = post_login(request_data)
         if error is None:
             del user_data['_id']
             del user_data['password']

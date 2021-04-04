@@ -2,10 +2,39 @@ import datetime
 import copy
 from views.config import page_default
 from utils import calculate_accuracy, paginate
+from werkzeug.security import check_password_hash
 from pymongo import MongoClient
 
 mongoClient = MongoClient('mongodb://localhost:27017/')
 db = mongoClient['chatbot']
+
+# users
+def post_sign_up(request_data):
+    collection = db['users']
+    user_data = collection.find_one(filter={'email': request_data['email']})
+    error = None
+    if user_data:
+        error = '이미 존재하는 사용자입니다.'
+    else:
+        user_data = collection.find_one(sort=[('create_time', -1)])
+        if user_data:
+            user_id = user_data['user_id'] + 1
+        else:
+            user_id = 1
+        request_data['create_time'] = str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        request_data['user_id'] = user_id
+        collection.insert(request_data)
+    return error
+
+def post_login(request_data):
+    collection = db['users']
+    error = None
+    user_data = collection.find_one(filter={'email': request_data['email']})
+    if not user_data:
+        error = "존재하지 않는 사용자입니다."
+    elif not check_password_hash(user_data['password'], request_data['password']):
+        error = "비밀번호가 올바르지 않습니다."
+    return error, user_data
 
 # bayesianFilter.py
 def set_baysien():
@@ -225,6 +254,8 @@ def post_pre_word(request_data):
         bayesianUpdate = True
     elif type == 'split' and word in sub:
         collection.update_one({'type':type, 'word':word}, {'$set':{'type':type, 'word':word, 'sub':sub}}, upsert=True)
+    elif type == 'custom_vocab' and word in sub:
+        collection.update_one({'type':type, 'word':sub}, {'$set':{'type':type, 'word':sub}}, upsert=True)
     # word_count에 있는 word를 삭제하고 sub쪽에 단어를 증가
     if bayesianUpdate:
         collection = db['bayesian']
