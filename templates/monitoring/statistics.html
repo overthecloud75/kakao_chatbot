@@ -54,18 +54,46 @@ new Chart(document.getElementById("canvas"), {
         labels: {{ xlabels | tojson }} ,
         datasets: [{
             label: 'deep_accuracy',
-            data: {{ deep_dataset | tojson }},
+            data: {{ deep_dataset1 | tojson }},
+            borderColor: "rgba(247, 16, 74, 1)",
+            fill: false,
+            lineTension: 0
+        },
+        {
+            label: 'deep_accuracy',
+            data: {{ deep_dataset2 | tojson }},
+            borderColor: "rgba(247, 16, 74, 1)",
+            fill: false,
+            lineTension: 0
+        },
+        {
+            label: 'deep_accuracy',
+            data: {{ deep_dataset3 | tojson }},
             borderColor: "rgba(247, 16, 74, 1)",
             fill: false,
             lineTension: 0
         },
         {
             label: 'bay_accuracy',
-            data: {{ bay_dataset | tojson }},
+            data: {{ bay_dataset1 | tojson }},
             borderColor: "rgba(74, 16, 247, 1)",
             fill: false,
             lineTension: 0
-        }
+        },
+        {
+            label: 'bay_accuracy',
+            data: {{ bay_dataset2 | tojson }},
+            borderColor: "rgba(74, 16, 247, 1)",
+            fill: false,
+            lineTension: 0
+        },
+        {
+            label: 'bay_accuracy',
+            data: {{ bay_dataset3 | tojson }},
+            borderColor: "rgba(74, 16, 247, 1)",
+            fill: false,
+            lineTension: 0
+        },
         ]
     },
     options: {

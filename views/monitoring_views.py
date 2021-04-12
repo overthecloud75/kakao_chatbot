@@ -46,16 +46,28 @@ def statistics():
     paging, collection_list = get_statistics_list(page=page, sort=so_list)
     data_list = []
     xlabels = []
-    deep_dataset = []
-    bay_dataset = []
+    deep_dataset1 = []
+    deep_dataset2 = []
+    deep_dataset3 = []
+    bay_dataset1 = []
+    bay_dataset2 = []
+    bay_dataset3 = []
     for data in collection_list:
         data_list.append(data)
         xlabels.append(data['date'])
-        deep_dataset.append(data['deep_accuracy'][0])
-        bay_dataset.append(data['bay_accuracy'][0])
+        deep_dataset1.append(data['deep_accuracy'][0])
+        deep_dataset2.append(data['deep_accuracy'][1])
+        deep_dataset3.append(data['deep_accuracy'][2])
+        bay_dataset1.append(data['bay_accuracy'][0])
+        bay_dataset2.append(data['bay_accuracy'][1])
+        bay_dataset3.append(data['bay_accuracy'][2])
     xlabels.reverse()
-    deep_dataset.reverse()
-    bay_dataset.reverse()
+    deep_dataset1.reverse()
+    deep_dataset2.reverse()
+    deep_dataset3.reverse()
+    bay_dataset1.reverse()
+    bay_dataset2.reverse()
+    bay_dataset3.reverse()
     sort_type = 'timestamp'
     return render_template('monitoring/statistics.html', **locals())
 

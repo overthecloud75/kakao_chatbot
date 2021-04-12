@@ -25,7 +25,7 @@ def index():
 def signup():
     form = UserCreateForm()
     if request.method == 'POST' and form.validate_on_submit():
-        request_data = {'name': form.name.data, 'email': form.email.data, 'password': generate_password_hash(form.password1.data)}
+        request_data = {'name':form.name.data, 'email':form.email.data, 'password':generate_password_hash(form.password1.data)}
         error = post_sign_up(request_data)
         if error:
             flash('이미 존재하는 사용자입니다.')
@@ -37,7 +37,7 @@ def signup():
 def login():
     form = UserLoginForm()
     if request.method == 'POST' and form.validate_on_submit():
-        request_data = {'email': form.email.data, 'password': form.password.data}
+        request_data = {'email':form.email.data, 'password':form.password.data}
         error, user_data = post_login(request_data)
         if error is None:
             del user_data['_id']
