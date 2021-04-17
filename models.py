@@ -118,21 +118,21 @@ def get_intent_data_list(intent, page=1, keyword=None):
 
 def post_intent(request_data):
     intent = request_data['intent']
+    collection = db['bayesian']
+    data = collection.find_one({'type':'intent', 'intent':intent})
     if 'msg' in request_data:
-        collection = db['intent']
-        data = collection.find_one(request_data)
-
-        if data is None:
-            update = copy.deepcopy(request_data)
-            update['timestamp'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            collection.update_one({'msg':request_data['msg']},{'$set':update}, upsert=True)
-            count = collection.find({'intent':intent}).count()
-            collection = db['bayesian']
-            update = {'count':count}
-            collection.update_one({'type':'intent', 'intent':intent}, {'$set':update}, upsert=True)
+        if data:
+            collection = db['intent']
+            data = collection.find_one(request_data)
+            if data is None:
+                update = copy.deepcopy(request_data)
+                update['timestamp'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                collection.update_one({'intent':intent},{'$set':update}, upsert=True)
+                count = collection.find({'intent':intent}).count()
+                collection = db['bayesian']
+                update = {'count':count}
+                collection.update_one({'type':'intent', 'intent':intent}, {'$set':update}, upsert=True)
     else:
-        collection = db['bayesian']
-        data = collection.find_one({'type':'intent', 'intent':intent})
         if data is None:
             insert = {'type':'intent', 'intent':intent, 'count':0, 'timestamp':datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             collection.insert_one(insert)
