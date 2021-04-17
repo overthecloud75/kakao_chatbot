@@ -127,7 +127,7 @@ def post_intent(request_data):
             if data is None:
                 update = copy.deepcopy(request_data)
                 update['timestamp'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                collection.update_one({'intent':intent},{'$set':update}, upsert=True)
+                collection.update_one({'msg':update['msg']},{'$set':update}, upsert=True)
                 count = collection.find({'intent':intent}).count()
                 collection = db['bayesian']
                 update = {'count':count}
@@ -252,8 +252,13 @@ def post_pre_word(request_data):
     elif type == 'stopwords':
         collection.update_one({'type':type, 'word':word}, {'$set':{'type':type, 'word':word}}, upsert=True)
         bayesianUpdate = True
-    elif type == 'split' and word in sub:
-        collection.update_one({'type':type, 'word':word}, {'$set':{'type':type, 'word':word, 'sub':sub}}, upsert=True)
+    elif type == 'split':
+        subSplit = sub.split(' ')
+        subWord = ''
+        for split in subSplit:
+            subWord = subWord + split
+        if word == subWord:
+            collection.update_one({'type':type, 'word':word}, {'$set':{'type':type, 'word':word, 'sub':sub}}, upsert=True)
     elif type == 'custom_vocab' and word in sub:
         collection.update_one({'type':type, 'word':sub}, {'$set':{'type':type, 'word':sub}}, upsert=True)
     # word_count에 있는 word를 삭제하고 sub쪽에 단어를 증가

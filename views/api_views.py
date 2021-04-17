@@ -161,6 +161,11 @@ def deepPrediction(words):
     for word in words:
         sentence.append(word_index[word])
     x = pad_sequences([sentence], maxlen=max_len)
+
+    # https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/sequence/pad_sequences
+    # tf.keras.preprocessing.sequence.pad_sequences(sequence, maxlen=2)
+    # array([[0, 1], [2, 3], [5, 6]])
+
     y = model.predict(x)
     y = tf.nn.softmax(y).numpy().tolist()[0]
 
