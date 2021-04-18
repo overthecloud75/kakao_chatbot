@@ -125,7 +125,12 @@ class PreProcess:
                     elif word in self.stopwords:
                         pass
                     else:
-                        new_results.append(word)
+                        if word in self.split_words:
+                            split_words = self.split_words[word].split(' ')
+                            for w in split_words:
+                                new_results.append(w)
+                        else:
+                            new_results.append(word)
                     add = 3
                 elif i < len_result - 2 and results[i] + results[i + 1] + results[i + 2] in self.custom_vocab:
                     word = results[i] + results[i + 1] + results[i + 2]
@@ -137,7 +142,12 @@ class PreProcess:
                     elif word in self.stopwords:
                         pass
                     else:
-                        new_results.append(word)
+                        if word in self.split_words:
+                            split_words = self.split_words[word].split(' ')
+                            for w in split_words:
+                                new_results.append(w)
+                        else:
+                            new_results.append(word)
                     add = 2
                 elif i < len_result - 1 and results[i] + results[i + 1] in self.custom_vocab:
                     word = results[i] + results[i + 1]
@@ -149,7 +159,12 @@ class PreProcess:
                     elif word in self.stopwords:
                         pass
                     else:
-                        new_results.append(word)
+                        if word in self.split_words:
+                            split_words = self.split_words[word].split(' ')
+                            for w in split_words:
+                                new_results.append(w)
+                        else:
+                            new_results.append(word)
                     add = 1
                 else:
                     word = results[i]
@@ -161,7 +176,12 @@ class PreProcess:
                     elif word in self.stopwords:
                         pass
                     else:
-                        new_results.append(word)
+                        if word in self.split_words:
+                            split_words = self.split_words[word].split(' ')
+                            for w in split_words:
+                                new_results.append(w)
+                        else:
+                            new_results.append(word)
         else:
             for word in results:
                 if word in self.synonym:
@@ -172,5 +192,10 @@ class PreProcess:
                 elif word in self.stopwords:
                     pass
                 else:
-                    new_results.append(word)
+                    if word in self.split_words:
+                        split_words = self.split_words[word].split(' ')
+                        for w in split_words:
+                            new_results.append(w)
+                    else:
+                        new_results.append(word)
         return new_results
