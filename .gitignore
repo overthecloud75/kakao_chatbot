@@ -9,3 +9,4 @@ views/__pycache__
 views/category_config.py
 predictions/intent.h5
 kakao_chatbot.pptx
+request_test.py

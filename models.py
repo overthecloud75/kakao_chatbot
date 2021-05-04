@@ -176,7 +176,7 @@ def post_monitoring(timestamp=None, category=None):
     collection = db['kakao']
     collection.update_one({'timestamp':timestamp}, {'$set':{'category':category}})
 
-def get_statistics_list(page=1, sort=None):
+def get_accuracy_list(page=1, sort=None):
     if sort is None or sort == '':
         sort = [('date', -1)]
     per_page = page_default['per_page']
@@ -213,6 +213,13 @@ def get_statistics_list(page=1, sort=None):
     data_list = collection.find(sort=sort).limit(per_page).skip(offset)
     paging = paginate(page, per_page, count)
     return paging, data_list
+
+def get_statistics_list():
+    collection = db['statistics']
+    accuracy_list = collection.find(sort=[('date', 1)])
+    collection = db['bayesian']
+    word_list = collection.find({'type':'word_count'}, sort=[('count', -1)])
+    return accuracy_list, word_list
 
 # word_view
 def get_word_list(page=1, sort=None, keyword=None):

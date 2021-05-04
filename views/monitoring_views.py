@@ -1,7 +1,7 @@
 from flask import Blueprint, request, render_template, url_for, g, flash
 from werkzeug.utils import redirect
 from form import MonitoringForm
-from models import get_category_list, get_monitoring_data_list, post_monitoring, get_nlp_list, get_statistics_list
+from models import get_category_list, get_monitoring_data_list, post_monitoring, get_nlp_list, get_accuracy_list, get_statistics_list
 from utils import request_get
 import functools
 
@@ -38,12 +38,12 @@ def nlp():
     paging, data_list = get_nlp_list(page=page, keyword=keyword)
     return render_template('monitoring/nlp.html', **locals())
 
-@bp.route('/statistics/', methods=('GET', 'POST'))
+@bp.route('/accuracy/')
 @login_required
-def statistics():
+def accuracy():
     sort_type = 'date'
     page, keyword, so, so_list = request_get(request.args, sort_type=sort_type)
-    paging, collection_list = get_statistics_list(page=page, sort=so_list)
+    paging, collection_list = get_accuracy_list(page=page, sort=so_list)
     data_list = []
     xlabels = []
     deep_dataset1 = []
@@ -68,7 +68,37 @@ def statistics():
     bay_dataset1.reverse()
     bay_dataset2.reverse()
     bay_dataset3.reverse()
+
     sort_type = 'timestamp'
+    return render_template('monitoring/accuracy.html', **locals())
+
+@bp.route('/statistics/')
+@login_required
+def statistics():
+    sort_type = 'date'
+    page, keyword, so, so_list = request_get(request.args, sort_type=sort_type)
+    accuracy_list, word_list = get_statistics_list()
+    xlabels = []
+    deep_dataset1 = []
+    deep_dataset2 = []
+    deep_dataset3 = []
+    bay_dataset1 = []
+    bay_dataset2 = []
+    bay_dataset3 = []
+    for data in accuracy_list:
+        xlabels.append(data['date'])
+        deep_dataset1.append(data['deep_accuracy'][0])
+        deep_dataset2.append(data['deep_accuracy'][1])
+        deep_dataset3.append(data['deep_accuracy'][2])
+        bay_dataset1.append(data['bay_accuracy'][0])
+        bay_dataset2.append(data['bay_accuracy'][1])
+        bay_dataset3.append(data['bay_accuracy'][2])
+
+    word_set = []
+    count_set = []
+    for data in word_list:
+        word_set.append(data['word'])
+        count_set.append(data['count'])
     return render_template('monitoring/statistics.html', **locals())
 
 # render_template with multiple variables
