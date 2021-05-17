@@ -57,45 +57,39 @@ class PreProcess:
         if pre:
             #text = self.spacer.space(text, custom_vocab=self.custom_vocab)
             #text = spacing(text)
-            text = self.spacer.spacing(text)
-            spacetext = text
-            split_text = text.split(' ')
-            fix_text = ''
-            for word in split_text:
-                fix_split = False
-                for split_word in self.split_words:
-                    if split_word in word:
-                        if fix_text == '':
-                            fix_text = self.split_words[split_word]
-                        else:
-                            fix_text = fix_text + ' ' + self.split_words[split_word]
-                        fix_split = True
-                        break
-                if not fix_split:
-                    if fix_text == '':
-                        fix_text = word
-                    else:
-                        fix_text = fix_text + ' ' + word
+            spacetext = text.split(' ')
+            new_text = ''
+
+            for word in spacetext:
+                if word in self.synonym:               # 오타 수정
+                    word = self.synonym[word]
+                if word in self.split_words:           # 뛰어 쓰기 안 되는 것에 대한 뛰어 쓰기 진행
+                    word = self.split_words[word]
+                if new_text == '':
+                    new_text = word
+                else:
+                    new_text = new_text + ' ' + word
+
+            new_text = self.spacer.spacing(new_text)
+            spacetext = new_text
         else:
-            fix_text = []
+            new_text = []
             for word in text:
                 if word in self.split_words:
-                    fix_text = fix_text + self.split_words[word].split(' ')
+                    new_text = new_text + self.split_words[word].split(' ')
                 else:
-                    fix_text.append(word)
-        return spacetext, fix_text
+                    new_text.append(word)
+        return spacetext, new_text
 
     def split(self, text):
         results = []
-        spacetext, text = self.pre_text(text)
+        spacetext, text = self.pre_text(text)  # 뛰워쓰기 및 오타 수정
         corpus = twitter.pos(text, norm=True, stem=True)
         for word in corpus:
             if not word[1] in ['Josa', 'Eomi', 'Punctuation'] and not word[0] == '\n' and not word[0] == '\n\n':
                 word0 = word[0]
                 if eng.match(word0):
                     word0 = word0.lower()
-                if word0 in self.synonym:
-                    word0 = self.synonym[word0]
                 if han.match(word0):
                     pass
                 else:
