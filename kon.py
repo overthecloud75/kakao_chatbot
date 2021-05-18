@@ -1,6 +1,6 @@
 import numpy as np
-import csv
 import datetime
+import time
 
 # learning
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -45,12 +45,11 @@ def paraSaveAndTest(para=False, filter=None, preProcessing=None):
 
             spacetext, corpus, words = preProcessing.split(msg)
             filter.fit(words, intent)
-            update = {'timestamp':datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                      'msg':msg,
-                      'spacetext':spacetext,
-                      'corpus':corpus,
-                      'words': words,
-                      'intent':intent}
+            if 'timestamp' in data:
+                update = {'timestamp':data['timestamp'], 'msg':msg, 'spacetext':spacetext, 'corpus':corpus, 'words':words, 'intent':intent}
+            else:
+                update = {'msg':msg, 'spacetext':spacetext, 'corpus':corpus, 'words':words, 'intent':intent}
+
             collection.update_one({'msg':msg}, {'$set':update}, upsert=True)
             intent_train.append(words)
 
@@ -111,6 +110,7 @@ def deepModelParaSave(word_index, index_words, idx_label, max_len_list):
 if __name__ == '__main__' :
 
     # when training, para = False
+    timestamp = time.time()
     para = False
 
     preProcessing = PreProcess(para=para)
@@ -174,6 +174,7 @@ if __name__ == '__main__' :
     max_len_list = [max_len]
     deepModelParaSave(word_index, index_words, idx_label, max_len_list)
     print(word_index)
+    print(time.time() - timestamp)
 
 
 

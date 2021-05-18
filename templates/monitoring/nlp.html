@@ -15,6 +15,7 @@
             <th>corpus</th>
             <th>words</th>
             <th>intent</th>
+            <th>timestamp</th>
         </tr>
         </thead>
         {% for intent in data_list %}
@@ -25,6 +26,7 @@
             <td>{{ intent.corpus }}</td>
             <td>{{ intent.words }}</td>
             <td>{{ intent.intent }}</td>
+            <td>{{ intent.timestamp }}</td>
         </tr>
         {% endfor %}
     {% else %}

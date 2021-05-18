@@ -45,7 +45,10 @@ def set_baysien():
     for data in data_list:
         words.append(data['word'])
     data = collection.find_one(filter={'word_dict': {'$exists': 'true'}})
-    word_dict = data['word_dict']
+    if data is not None:
+        word_dict = data['word_dict']
+    else:
+        word_dict = {}
 
     category_dict = {}
     data_list = collection.find({'type':'intent'})
@@ -151,9 +154,9 @@ def get_nlp_list(page=1, keyword=None):
     offset = (page - 1) * per_page
     collection = db['nlp']
     if keyword is None or keyword == '':
-        data_list = collection.find().limit(per_page).skip(offset)
+        data_list = collection.find(sort = [('timestamp', -1)]).limit(per_page).skip(offset)
     else:
-        data_list = collection.find({'words':{'$regex':keyword}}).limit(per_page).skip(offset)
+        data_list = collection.find({'words':{'$regex':keyword}}, sort = [('timestamp', -1)]).limit(per_page).skip(offset)
     count = data_list.count()
     paging = paginate(page, per_page, count)
     return paging, data_list

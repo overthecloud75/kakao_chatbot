@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('agg')
 import cv2
 
-from .category_config import config_scorelist, config_account, config_system
+from .category_config import config_score, config_account, config_system
 from .response import conditionalCheckIntent, simpleResponse, cardResponse
 from models import kakaoWrite
 from utils import _request_data
@@ -80,9 +80,9 @@ def kakao():
                     if detect in words:
                         detection = True
                         if detect in config_account:
-                            scorelist = config_scorelist['account']
+                            scorelist = config_score['account']
                         elif detect in config_system:
-                            scorelist = config_scorelist['system']
+                            scorelist = config_score['system']
 
                         # message
                         actionList = ''
