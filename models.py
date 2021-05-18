@@ -239,6 +239,17 @@ def get_word_list(page=1, sort=None, keyword=None):
     paging = paginate(page, per_page, count)
     return paging, data_list
 
+def get_word_typo():
+    collection = db['preprocess']
+    typo = {}
+    data_list = collection.find({'type':'typo'})
+    for data in data_list:
+        if data['sub'] in typo:
+            typo[data['sub']].append(data['word'])
+        else:
+            typo[data['sub']] = [data['word']]
+    return typo
+
 def get_word_synonym():
     collection = db['preprocess']
     synonym = {}
@@ -250,13 +261,24 @@ def get_word_synonym():
             synonym[data['sub']] = [data['word']]
     return synonym
 
+def get_typo_synonym():
+    typo_synonym = get_word_typo()
+    collection = db['preprocess']
+    data_list = collection.find({'type': 'synonym'})
+    for data in data_list:
+        if data['sub'] in typo_synonym:
+            typo_synonym[data['sub']].append(data['word'])
+        else:
+            typo_synonym[data['sub']] = [data['word']]
+    return typo_synonym
+
 def post_pre_word(request_data):
     type = request_data['type']
     word = request_data['word']
     sub = request_data['sub']
     collection = db['preprocess']
     bayesianUpdate = False
-    if type == 'synonym' and sub != '':
+    if (type == 'synonym' or type == 'typo') and sub != '':
         collection.update_one({'type':type, 'word':word}, {'$set':{'type':type, 'word':word, 'sub':sub}}, upsert=True)
         bayesianUpdate = True
     elif type == 'stopwords':

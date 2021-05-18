@@ -15,6 +15,11 @@ twitter = Okt()
 
 def openText():
     collection = db['preprocess']
+    typo = {}
+    data_list = collection.find({'type':'typo'})
+    for data in data_list:
+        typo[data['word']] = data['sub']
+
     synonym = {}
     data_list = collection.find({'type':'synonym'})
     for data in data_list:
@@ -33,7 +38,7 @@ def openText():
     data_list = collection.find({'type':'split'})
     for data in data_list:
         split_words[data['word']] = data['sub']
-    return synonym, stopwords, custom_vocab, split_words
+    return typo, synonym, stopwords, custom_vocab, split_words
 
 class PreProcess:
     def __init__(self, para=False):
@@ -41,7 +46,7 @@ class PreProcess:
         self.spacer = PredSpacing()
         self.para = para
 
-        self.synonym, self.stopwords, self.custom_vocab, self.split_words = openText()
+        self.typo, self.synonym, self.stopwords, self.custom_vocab, self.split_words = openText()
         if para:
             collection = db['bayesian']
             word_count = {}
@@ -57,19 +62,19 @@ class PreProcess:
         if pre:
             #text = self.spacer.space(text, custom_vocab=self.custom_vocab)
             #text = spacing(text)
+            text = text.lower()
             spacetext = text.split(' ')
             new_text = ''
 
             for word in spacetext:
-                if word in self.synonym:               # 오타 수정
-                    word = self.synonym[word]
-                if word in self.split_words:           # 뛰어 쓰기 안 되는 것에 대한 뛰어 쓰기 진행
-                    word = self.split_words[word]
+                #if word in self.synonym:               # 오타 수정
+                word = self.typo_correction(word)
+                #if word in self.split_words:           # 뛰어 쓰기 안 되는 것에 대한 뛰어 쓰기 진행
+                word = self.split_correction(word)
                 if new_text == '':
                     new_text = word
                 else:
                     new_text = new_text + ' ' + word
-
             new_text = self.spacer.spacing(new_text)
             spacetext = new_text
         else:
@@ -88,8 +93,6 @@ class PreProcess:
         for word in corpus:
             if not word[1] in ['Josa', 'Eomi', 'Punctuation'] and not word[0] == '\n' and not word[0] == '\n\n':
                 word0 = word[0]
-                if eng.match(word0):
-                    word0 = word0.lower()
                 if han.match(word0):
                     pass
                 else:
@@ -193,3 +196,17 @@ class PreProcess:
                     else:
                         new_results.append(word)
         return new_results
+
+    def typo_correction(self, word):
+        for typo in self.typo:
+            if typo in word:
+                word = re.sub(typo, self.typo[typo], word)
+                break
+        return word
+
+    def split_correction(self, word):
+        for split in self.split_words:
+            if split in word:
+                word = re.sub(split, self.split_words[split], word)
+                break
+        return word
