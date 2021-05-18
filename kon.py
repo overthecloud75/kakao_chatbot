@@ -100,12 +100,41 @@ def deepModelParaSave(word_index, index_words, idx_label, max_len_list):
     collection = db['deep']
     for word in word_index:
         update = {'type':'word_index', 'word':word, 'idx':word_index[word]}
-        collection.update_one({'type':'word_index', 'word':word}, {'$set': update}, upsert=True)
+        collection.update_one({'type':'word_index', 'word':word}, {'$set':update}, upsert=True)
     for word in idx_label:
         update = {'type':'idx_label', 'idx':word, 'label':idx_label[word]}
-        collection.update_one({'type':'idx_label', 'idx':word}, {'$set': update}, upsert=True)
-    update = {'max_len_list': max_len_list}
+        collection.update_one({'type':'idx_label', 'idx':word}, {'$set':update}, upsert=True)
+    update = {'max_len_list':max_len_list}
     collection.update_one({'max_len_list': {'$exists':'true'}}, {'$set':update}, upsert=True)
+
+def prewordCount(preProcessing):
+    typo_count = preProcessing.typo_count
+    synonym_count = preProcessing.synonym_count
+    custom_vocab_count = preProcessing.custom_vocab_count
+    stopwords_count = preProcessing.stopwords_count
+    split_words_count = preProcessing.split_words_count
+
+    db.drop_collection('precount')
+    collection = db['precount']
+    for word in typo_count:
+        update = {'type':'typo', 'word':word, 'count':typo_count[word]}
+        collection.update_one({'type':'typo', 'word':word}, {'$set':update}, upsert=True)
+
+    for word in synonym_count:
+        update = {'type':'synonym', 'word':word, 'count':synonym_count[word]}
+        collection.update_one({'type':'synonym', 'word':word}, {'$set':update}, upsert=True)
+
+    for word in custom_vocab_count:
+        update = {'type':'custom_vocab', 'word':word, 'count':custom_vocab_count[word]}
+        collection.update_one({'type':'custom_vocab', 'word':word}, {'$set':update}, upsert=True)
+
+    for word in stopwords_count:
+        update = {'type':'stopwords', 'word':word, 'count':stopwords_count[word]}
+        collection.update_one({'type':'stopwords', 'word':word}, {'$set':update}, upsert=True)
+
+    for word in split_words_count:
+        update = {'type':'split', 'word':word, 'count':split_words_count[word]}
+        collection.update_one({'type':'split_words', 'word':word}, {'$set':update}, upsert=True)
 
 if __name__ == '__main__' :
 
@@ -117,6 +146,7 @@ if __name__ == '__main__' :
     bf = BayesianFilter(para=para)
 
     intent_train, label_train, label_idx, idx_label = paraSaveAndTest(para=para, filter=bf, preProcessing=preProcessing)
+    prewordCount(preProcessing)
 
     tokenizer = Tokenizer()
     tokenizer.fit_on_texts(intent_train)
