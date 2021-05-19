@@ -52,14 +52,14 @@ def openText():
     return typo, typo_count, synonym, synonym_count, stopwords, stopwords_count, custom_vocab, custom_vocab_count, split_words, split_words_count
 
 class PreProcess:
-    def __init__(self, para=False):
+    def __init__(self, train=False):
         # self.spacer = ChatSpace()
         self.spacer = PredSpacing()
-        self.para = para
+        self.train = train
 
         self.typo, self.typo_count, self.synonym, self.synonym_count, self.stopwords, self.stopwords_count, \
         self.custom_vocab, self.custom_vocab_count, self.split_words, self.split_words_count = openText()
-        if para:
+        if not self.train:
             collection = db['bayesian']
             word_count = {}
             data_list = collection.find({'type':'word_count'})
@@ -117,12 +117,18 @@ class PreProcess:
                 elif i < len_result - 3 and word_list[i][0] + word_list[i + 1][0] + word_list[i + 2][0] + word_list[i + 3][0] in self.custom_vocab:
                     word = [word_list[i][0] + word_list[i + 1][0] + word_list[i + 2][0] + word_list[i + 3][0], 'Noun']
                     add = 3
+                    if self.train:
+                        self.custom_vocab_count[word[0]] = self.custom_vocab_count[word[0]] + 1
                 elif i < len_result - 2 and word_list[i][0] + word_list[i + 1][0] + word_list[i + 2][0] in self.custom_vocab:
                     word = [word_list[i][0] + word_list[i + 1][0] + word_list[i + 2][0], 'Noun']
                     add = 2
+                    if self.train:
+                        self.custom_vocab_count[word[0]] = self.custom_vocab_count[word[0]] + 1
                 elif i < len_result - 1 and word_list[i][0] + word_list[i + 1][0] in self.custom_vocab:
                     word = [word_list[i][0] + word_list[i + 1][0], 'Noun']
                     add = 1
+                    if self.train:
+                        self.custom_vocab_count[word[0]] = self.custom_vocab_count[word[0]] + 1
                 else:
                     word = word_list[i]
                 if word is not None:
@@ -169,7 +175,7 @@ class PreProcess:
             for typo in self.typo:
                 if typo in word:
                     word = re.sub(typo, self.typo[typo], word)
-                    if not self.para:
+                    if self.train:
                         self.typo_count[self.typo[typo]] = self.typo_count[self.typo[typo]] + 1
                     break
             if text == '':
@@ -185,7 +191,7 @@ class PreProcess:
             for split in self.split_words:
                 if split in word:
                     word = re.sub(split, self.split_words[split], word)
-                    if not self.para:
+                    if self.train:
                         self.split_words_count[self.split_words[split]] = self.split_words_count[
                                                                               self.split_words[split]] + 1
                     break
@@ -196,18 +202,18 @@ class PreProcess:
         return text
 
     def custom_correction(self, word, custom=False):
-        if not self.para and custom:
+        if self.train and custom:
             self.custom_vocab_count[word] = self.custom_vocab_count[word] + 1
         if word in self.synonym:
             word = self.synonym[word]
-            if not self.para:
+            if self.train:
                 self.synonym_count[word] = self.synonym_count[word] + 1
-        if self.para and word not in self.word_count and word not in self.synonym:
+        if not self.train and word not in self.word_count:
             print('not self.world_count', word)
             word_list = []
         elif word in self.stopwords:
             word_list = []
-            if not self.para:
+            if self.train:
                 self.stopwords_count[word] = self.stopwords_count[word] + 1
         else:
             word_list = self.split_matching(word)
@@ -216,7 +222,7 @@ class PreProcess:
     def split_matching(self, word):
         if word in self.split_words:
             split_words = self.split_words[word].split(' ')
-            if not self.para:
+            if self.train:
                 self.split_words_count[self.split_words[word]] = self.split_words_count[self.split_words[word]] + 1
         else:
             split_words = word.split(' ')

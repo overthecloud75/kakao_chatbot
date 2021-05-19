@@ -2,8 +2,8 @@ import math
 from models import set_baysien
 
 class BayesianFilter:
-    def __init__(self, para=False):
-        if para:
+    def __init__(self, train=False):
+        if not train:
             self.words, self.word_dict, self.category_dict, self.word_count = set_baysien()
         else:
             self.words = set()

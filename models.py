@@ -314,3 +314,122 @@ def post_pre_word(request_data):
             if sub_count:
                 count = sub_count['count'] + count
                 collection.update_one({'type':'word_count', 'word':sub}, {'$set':{'count':count}})
+
+# train
+def get_post_nlp(filter=None, preProcessing=None):
+    intent_train = []
+    label_train = []
+    label_idx = {}
+    idx_label = {}
+
+    collection = db['intent']
+    data_list = collection.find()
+    intent_total_count = collection.count_documents({})
+    db.drop_collection('nlp')
+    collection = db['nlp']
+    for data in data_list:
+        msg = data['msg']
+        intent = data['intent']
+        if intent in label_idx:
+            idx = label_idx[intent]
+            label_train.append(idx)
+        else:
+            idx_label[str(len(label_idx))] = intent
+            label_idx[intent] = len(label_idx)
+            idx = label_idx[intent]
+            label_train.append(idx)
+            # Why using integer as a key with pymongo doesn't work?
+            # https://stackoverflow.com/questions/21592468/why-using-integer-as-a-key-with-pymongo-doesnt-work
+
+        spacetext, corpus, words = preProcessing.split(msg)
+        filter.fit(words, intent)
+        if 'timestamp' in data:
+            update = {'timestamp':data['timestamp'], 'msg':msg, 'spacetext':spacetext, 'corpus':corpus,
+                      'words':words, 'intent':intent}
+        else:
+            update = {'msg':msg, 'spacetext':spacetext, 'corpus':corpus, 'words':words, 'intent':intent}
+
+        collection.update_one({'msg':msg}, {'$set':update}, upsert=True)
+        intent_train.append(words)
+    return intent_total_count, intent_train, label_train, label_idx, idx_label
+
+def post_bayesian(filter=None):
+    # How to drop a collection with pymongo?
+    # https://stackoverflow.com/questions/48923682/how-to-drop-a-collection-with-pymongo
+
+    collection = db['bayesian']
+    data_list = collection.find({'type':'word_count'})
+    old_word_count = {}
+    for data in data_list:
+        old_word_count[data['word']] = data['count']
+
+    db.drop_collection('bayesian')
+    collection = db['bayesian']
+
+    for word in list(filter.words):
+        update = {'type':'words', 'word':word}
+        collection.update_one({'type':'words', 'word':word}, {'$set':update}, upsert=True)
+    update = {'word_dict':filter.word_dict}
+    collection.update_one({'word_dict':{'$exists':'true'}}, {'$set':update}, upsert=True)
+    for key in filter.category_dict:
+        update = {'type':'intent', 'intent':key, 'count':filter.category_dict[key]}
+        collection.update_one({'type':'intent', 'intent':key}, {'$set':update}, upsert=True)
+    word_count = filter.get_total_word_count()
+    for key in word_count:
+        update = {'type':'word_count', 'word':key, 'count':word_count[key]}
+        collection.update_one({'type':'word_count', 'word':key}, {'$set':update}, upsert=True)
+
+    word_difference = []
+
+    for key in old_word_count:
+        if key in word_count:
+            del word_count[key]
+        else:
+            word_difference.append(key)
+
+    for key in word_count:
+        word_difference.append(key)
+
+    return word_difference
+
+def post_prewordCount(preProcessing=None):
+    typo_count = preProcessing.typo_count
+    synonym_count = preProcessing.synonym_count
+    custom_vocab_count = preProcessing.custom_vocab_count
+    stopwords_count = preProcessing.stopwords_count
+    split_words_count = preProcessing.split_words_count
+
+    collection = db['preprocess']
+    for word in typo_count:
+        update = {'type':'typo', 'sub':word, 'count':typo_count[word]}
+        collection.update_many({'type':'typo', 'sub':word}, {'$set':update}, upsert=True)
+
+    for word in synonym_count:
+        update = {'type':'synonym', 'sub':word, 'count':synonym_count[word]}
+        collection.update_many({'type':'synonym', 'sub':word}, {'$set':update}, upsert=True)
+
+    for word in custom_vocab_count:
+        update = {'type':'custom_vocab', 'word':word, 'count':custom_vocab_count[word]}
+        collection.update_many({'type':'custom_vocab', 'word':word}, {'$set':update}, upsert=True)
+
+    for word in stopwords_count:
+        update = {'type':'stopwords', 'word':word, 'count':stopwords_count[word]}
+        collection.update_many({'type':'stopwords', 'word':word}, {'$set':update}, upsert=True)
+
+    for word in split_words_count:
+        update = {'type':'split', 'sub':word, 'count':split_words_count[word]}
+        collection.update_many({'type':'split', 'sub':word}, {'$set':update}, upsert=True)
+
+def post_deepmodel(word_index, idx_label, max_len_list):
+    db.drop_collection('deep')
+    collection = db['deep']
+    for word in word_index:
+        update = {'type':'word_index', 'word':word, 'idx':word_index[word]}
+        collection.update_one({'type':'word_index', 'word':word}, {'$set':update}, upsert=True)
+    for word in idx_label:
+        update = {'type':'idx_label', 'idx':word, 'label':idx_label[word]}
+        collection.update_one({'type':'idx_label', 'idx':word}, {'$set':update}, upsert=True)
+    update = {'max_len_list':max_len_list}
+    collection.update_one({'max_len_list':{'$exists':'true'}}, {'$set':update}, upsert=True)
+
+

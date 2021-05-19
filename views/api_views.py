@@ -32,9 +32,9 @@ pipeline = keras_ocr.pipeline.Pipeline(max_size=700)
 pipe_time = time.time()
 
 # bayesianFilter
-para = True
-preProcessing = PreProcess(para=para)
-bf = BayesianFilter(para=para)
+train = False
+preProcessing = PreProcess(train=train)
+bf = BayesianFilter(train=train)
 
 # dnn model parameter 열기
 model = tf.keras.models.load_model('predictions/intent.h5')
