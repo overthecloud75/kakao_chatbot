@@ -69,25 +69,16 @@ class PreProcess:
         else:
             self.word_count = {}
 
-    def pre_text(self, text, pre=True):
-        if pre:
-            #text = self.spacer.space(text, custom_vocab=self.custom_vocab)
-            #text = spacing(text)
-            text = text.lower()
-            text = self.typo_correction(text)
-            text = self.spacer.spacing(text)
-            text = self.split_correction(text)
-            return text
-        else:
-            results = []
-            for word in text:
-                word_list = self.split_matching(word)
-                results = results + word_list
-            return results
+    def pre_text(self, text):
+        text = text.lower()
+        text = self.typo_correction(text) # 오다 수정
+        text = self.spacer.spacing(text) # 뛰어 쓰기
+        text = self.split_correction(text) # 뛰어 쓰기 추가
+        return text
 
     def split(self, text):
         results = []
-        text = self.pre_text(text)  # 뛰워쓰기 및 오타 수정
+        text = self.pre_text(text)  # 오타 수정 및 뛰어 쓰기
         corpus = twitter.pos(text, norm=True, stem=True)
         corpus = self.custom_corpus(corpus)
         for word in corpus:
@@ -100,8 +91,7 @@ class PreProcess:
             else:
                 if word[1] == 'Punctuation' and word[0] == '?':
                     results.append(word[0])
-        results = self.pre_text(results, pre=False)
-        results = self.custom(results)
+        results = self.post_corpus(results)
         return text, corpus, results
 
     def custom_corpus(self, corpus):
@@ -135,37 +125,25 @@ class PreProcess:
                     new_corpus.append(word)
         return new_corpus
 
-    def custom(self, results):
-        len_result = len(results)
+    def post_corpus(self, results):
         new_results = []
-        add = 0
-        if len_result > 0:
-            for i in range(len_result):
-                if add > 0:
-                    add = add - 1
-                elif i < len_result - 3 and results[i] + results[i + 1] + results[i + 2] + results[i + 3] in self.custom_vocab:
-                    word = results[i] + results[i + 1] + results[i + 2] + results[i + 3]
-                    word_list = self.custom_correction(word, custom=True)
-                    for word in word_list:
-                        new_results.append(word)
-                    add = 3
-                elif i < len_result - 2 and results[i] + results[i + 1] + results[i + 2] in self.custom_vocab:
-                    word = results[i] + results[i + 1] + results[i + 2]
-                    word_list = self.custom_correction(word, custom=True)
-                    for word in word_list:
-                        new_results.append(word)
-                    add = 2
-                elif i < len_result - 1 and results[i] + results[i + 1] in self.custom_vocab:
-                    word = results[i] + results[i + 1]
-                    word_list = self.custom_correction(word, custom=True)
-                    for word in word_list:
-                        new_results.append(word)
-                    add = 1
+        for word in results:
+            word_list = self.split_matching(word)
+            new_word_list = []
+            for word in word_list:
+                if word in self.synonym:
+                    word = self.synonym[word]
+                    if self.train:
+                        self.synonym_count[word] = self.synonym_count[word] + 1
+                if not self.train and word not in self.word_count:
+                    print('not self.world_count', word)
+                elif word in self.stopwords:
+                    if self.train:
+                        self.stopwords_count[word] = self.stopwords_count[word] + 1
                 else:
-                    word = results[i]
-                    word_list = self.custom_correction(word)
-                    for word in word_list:
-                        new_results.append(word)
+                    new_word_list.append(word)
+            for word in new_word_list:
+                new_results.append(word)
         return new_results
 
     def typo_correction(self, text):
@@ -200,24 +178,6 @@ class PreProcess:
             else:
                 text = text + ' ' + word
         return text
-
-    def custom_correction(self, word, custom=False):
-        if self.train and custom:
-            self.custom_vocab_count[word] = self.custom_vocab_count[word] + 1
-        if word in self.synonym:
-            word = self.synonym[word]
-            if self.train:
-                self.synonym_count[word] = self.synonym_count[word] + 1
-        if not self.train and word not in self.word_count:
-            print('not self.world_count', word)
-            word_list = []
-        elif word in self.stopwords:
-            word_list = []
-            if self.train:
-                self.stopwords_count[word] = self.stopwords_count[word] + 1
-        else:
-            word_list = self.split_matching(word)
-        return word_list
 
     def split_matching(self, word):
         if word in self.split_words:
