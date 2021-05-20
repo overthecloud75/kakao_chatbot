@@ -1,6 +1,7 @@
 from konlpy.tag import Okt
 from pykospacing.kospacing import PredSpacing
 # from chatspace import ChatSpace
+from hanspell import spell_checker
 
 import re
 
@@ -71,8 +72,18 @@ class PreProcess:
 
     def pre_text(self, text):
         text = text.lower()
-        text = self.typo_correction(text) # 오다 수정
-        text = self.spacer.spacing(text) # 뛰어 쓰기
+        try:
+            result = spell_checker.check(u'%s' %text)
+        except Exception as e:
+            print(e)
+            print(text)
+        else:
+            result = result.as_dict()
+            text = result['checked']
+            if result['errors'] > 0:
+                print(result)
+        text = self.typo_correction(text) # 오타 수정
+        # text = self.spacer.spacing(text) # 뛰어 쓰기
         text = self.split_correction(text) # 뛰어 쓰기 추가
         return text
 

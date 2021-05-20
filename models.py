@@ -315,6 +315,39 @@ def post_pre_word(request_data):
                 count = sub_count['count'] + count
                 collection.update_one({'type':'word_count', 'word':sub}, {'$set':{'count':count}})
 
+def get_pre_words(page, sort=None, keyword=None):
+    if sort is None or sort == '' or sort == [('count', -1)]:
+        sortType = True
+    else:
+        sortType = False
+    if keyword not in ['typo', 'synonym', 'split', 'custom_vocab', 'stopwords']:
+        keyword = 'typo'
+    per_page = page_default['per_page']
+    offset = (page - 1) * per_page
+
+    collection = db['preprocess']
+    if (keyword == 'typo' or keyword == 'synonym' or keyword == 'split') and sortType:
+        pipeline = [{'$match':{'type':keyword}}, {'$group':{'_id':'$sub', 'count':{'$avg':'$count'}}}, {'$sort':{'count':-1}}]
+    elif (keyword == 'typo' or keyword == 'synonym' or keyword == 'split') and not sortType:
+        pipeline = [{'$match':{'type':keyword}}, {'$group':{'_id':'$sub', 'count':{'$avg':'$count'}}}, {'$sort':{'count':1}}]
+    elif (keyword == 'custom_vocab' or keyword == 'stopwords') and sortType:
+        pipeline = [{'$match':{'type':keyword}}, {'$group':{'_id':'$word', 'count':{'$avg':'$count'}}}, {'$sort':{'count':-1}}]
+    else:
+        pipeline = [{'$match':{'type':keyword}}, {'$group':{'_id':'$word', 'count':{'$avg':'$count'}}}, {'$sort':{'count':1}}]
+
+    data_list = collection.aggregate(pipeline) #.limit(per_page).skip(offset)
+    new_data_list = []
+    useless_word_count = 0
+    for data in data_list:
+        count = int(data['count'])
+        if count == 0:
+            useless_word_count = useless_word_count + 1
+        new_data_list.append({'word':data['_id'], 'count':int(data['count'])})
+    count = len(new_data_list)
+    new_data_list = new_data_list[offset:offset+per_page]
+    paging = paginate(page, per_page, count)
+    return paging, new_data_list, keyword, useless_word_count
+
 # train
 def get_post_nlp(filter=None, preProcessing=None):
     intent_train = []
@@ -385,10 +418,10 @@ def post_bayesian(filter=None):
         if key in word_count:
             del word_count[key]
         else:
-            word_difference.append(key)
+            word_difference.append((key, -1))
 
     for key in word_count:
-        word_difference.append(key)
+        word_difference.append((key, 1))
 
     return word_difference
 

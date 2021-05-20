@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-3">
+
+    {% include 'search.html' %}
+    <h1>type: {{ keyword }} , useless_word_count: {{ useless_word_count }}</h1>
+
+<table class="table">
+    {% if data_list %}
+        <thead>
+        <tr class="thead-dark">
+            <th>번호</th>
+            <th>word</th>
+            <th>count</th>
+        </tr>
+        </thead>
+        {% for intent in data_list %}
+        <tr>
+            <td>{{ paging.count - paging.offset - loop.index0 }}</td>
+            <td>{{ intent.word }}</td>
+            <td>{{ intent.count }}</td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="3">there is no word.</td>
+        </tr>
+{% endif %}
+</table>
+</div>
+
+{% include 'paging.html' %}
+{% endblock %}

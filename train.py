@@ -14,10 +14,12 @@ from models import get_post_nlp, post_prewordCount, post_bayesian, post_deepmode
 def paraSaveAndTest(filter=None, preProcessing=None):
 
     # parameter database 저장
+    nlp_start_time = time.time()
     intent_total_count, intent_train, label_train, label_idx, idx_label = get_post_nlp(filter=filter, preProcessing=preProcessing)
+    nlp_time = time.time() - nlp_start_time
     word_difference = post_bayesian(filter=filter)
     post_prewordCount(preProcessing=preProcessing)
-    return intent_total_count, intent_train, label_train, label_idx, idx_label, word_difference
+    return intent_total_count, intent_train, label_train, label_idx, idx_label, word_difference, nlp_time
 
 def predict_bayesian(intent_total_count, intent_train, filter=None):
     pre1 = 0
@@ -44,13 +46,13 @@ def predict_bayesian(intent_total_count, intent_train, filter=None):
 if __name__ == '__main__' :
 
     # when training, train = True
-    timestamp = time.time()
+    start_time = time.time()
     train = True
 
     preProcessing = PreProcess(train=train)
     bf = BayesianFilter(train=train)
 
-    intent_total_count, intent_train, label_train, label_idx, idx_label, word_difference = paraSaveAndTest(filter=bf, preProcessing=preProcessing)
+    intent_total_count, intent_train, label_train, label_idx, idx_label, word_difference, nlp_time = paraSaveAndTest(filter=bf, preProcessing=preProcessing)
     # category_dict
     print(bf.category_dict)
     predict_bayesian(intent_total_count, intent_train, filter=bf)
@@ -114,7 +116,9 @@ if __name__ == '__main__' :
     print('-----------------------')
     print('word_difference')
     print(word_difference)
-    print(time.time() - timestamp)
+    print('-----------------------')
+    print('nlp time', nlp_time)
+    print('total time', time.time() - start_time)
 
 
 

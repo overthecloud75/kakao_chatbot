@@ -1,7 +1,7 @@
 from flask import Blueprint, request, render_template, url_for
 from werkzeug.utils import redirect
 from form import PrewordForm
-from models import get_word_list, get_typo_synonym, post_pre_word
+from models import get_word_list, get_typo_synonym, post_pre_word, get_pre_words
 from utils import request_get
 
 bp = Blueprint('word', __name__, url_prefix='/word')
@@ -24,3 +24,10 @@ def pre_word(word):
         typo_synonym = get_typo_synonym()
         return redirect(url_for('word.word'))
     return render_template('word/pre_word.html', **locals())
+
+@bp.route('/pre_words/')
+def pre_words():
+    sort_type = 'count'
+    page, keyword, so, so_list = request_get(request.args, sort_type=sort_type)
+    paging, data_list, keyword, useless_word_count = get_pre_words(page=page, sort=so_list, keyword=keyword)
+    return render_template('word/pre_words.html', **locals())
