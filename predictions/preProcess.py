@@ -11,7 +11,7 @@ mongoClient = MongoClient('mongodb://localhost:27017/')
 db = mongoClient['chatbot']
 
 han = re.compile('[ㄱ-ㅎㅏ-ㅣ]+')
-eng = re.compile('[a-zA-Z]+')
+#eng = re.compile('[a-zA-Z]+')
 twitter = Okt()
 
 def openText():

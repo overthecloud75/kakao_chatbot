@@ -23,5 +23,5 @@ class MonitoringForm(FlaskForm):
     category = StringField('category', validators=[DataRequired(), Length(min=2, max=20)])
 
 class PrewordForm(FlaskForm):
-    type = StringField('type', validators=[DataRequired(), Length(min=2, max=20)])
-    sub = StringField('sub', validators=[Length(min=0, max=20)])
+    type = StringField('type', validators=[DataRequired(), Length(min=2, max=30)])
+    sub = StringField('sub', validators=[Length(min=0, max=30)])

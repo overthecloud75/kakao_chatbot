@@ -3,13 +3,26 @@ import time
 import threading
 
 # ocr
-import keras_ocr
 from io import BytesIO
 import matplotlib
 matplotlib.use('agg')
 import cv2
+try:
+    import keras_ocr
+    # ocr setting
+    pipeline = keras_ocr.pipeline.Pipeline(max_size=700)
+    pipe_time = time.time()
+except Exception as e:
+    pipeline = None
+    print(e)
 
-from .category_config import config_score, config_account, config_system
+try:
+    from .category_config import config_score, config_account, config_system
+except Exception as e:
+    config_score = {'account':[], 'system':[]}
+    config_account = []
+    config_system = []
+
 from .response import conditionalCheckIntent, simpleResponse, cardResponse
 from models import kakaoWrite
 from utils import _request_data
@@ -26,10 +39,6 @@ bp = Blueprint('api', __name__, url_prefix='/api')
 
 # flask setting
 userRequest = {}
-
-# ocr setting
-pipeline = keras_ocr.pipeline.Pipeline(max_size=700)
-pipe_time = time.time()
 
 # bayesianFilter
 train = False
@@ -49,7 +58,7 @@ def kakao():
         return '', 204
     else:
         current_app.logger.info('%s - %s - %s - %s' %(request.remote_addr, request.url, threading.current_thread(), message['msg']))
-        if 'http' in message['msg'] and ('.png' in message['msg'] or '.jpg' in message['msg'] or '.jpeg' in message['msg']):
+        if pipeline and 'http' in message['msg'] and ('.png' in message['msg'] or '.jpg' in message['msg'] or '.jpeg' in message['msg']):
             # image process
             raw_image_url = 'raw_image/' + str(int(time.time())) + '.png'
             img = _request_data('GET', message['msg'])
@@ -95,12 +104,11 @@ def kakao():
                     response['template']['outputs'] = cardResponse(title='사진')
             else:
                 response['template']['outputs'] = cardResponse(title='사진')
-        elif 'http' in message['msg'] and '.gif' in message['msg']:
+        elif 'http' in message['msg'] and ('.gif' in message['msg'] or '.png' in message['msg'] or '.jpg' in message['msg'] or '.jpeg' in message['msg']):
             response['template']['outputs'] = cardResponse(title='사진')
         elif 'http' in message['msg'] and ('.mp4' in message['msg'] or '.mpg' in message['msg'] or '.avi' in message['msg']):
             response['template']['outputs'] = cardResponse(title='동영상')
         else:
-
             spacetext, corpus, words = preProcessing.split(message['msg'])
             current_app.logger.info('%s - %s' %('words', words))
 
