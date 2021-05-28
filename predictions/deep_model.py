@@ -38,3 +38,4 @@ class IntentModel:
                       optimizer='adam',
                       metrics=['acc'])
         return model
+

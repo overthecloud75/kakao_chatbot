@@ -29,10 +29,8 @@ from utils import _request_data
 
 # prediction
 from predictions.preProcess import PreProcess
+from predictions.pipeline import LoadModel
 from predictions.bayesianFilter import BayesianFilter
-import tensorflow as tf
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from models import set_deep
 
 # blueprint
 bp = Blueprint('api', __name__, url_prefix='/api')
@@ -40,14 +38,13 @@ bp = Blueprint('api', __name__, url_prefix='/api')
 # flask setting
 userRequest = {}
 
+# deep
+loadModel = LoadModel()
+
 # bayesianFilter
 train = False
 preProcessing = PreProcess(train=train)
 bf = BayesianFilter(train=train)
-
-# dnn model parameter 열기
-model = tf.keras.models.load_model('predictions/intent.h5')
-word_index, idx_label, max_len = set_deep()
 
 @bp.route('/',  methods=['GET', 'POST'])
 def kakao():
@@ -112,7 +109,7 @@ def kakao():
             spacetext, corpus, words = preProcessing.split(message['msg'])
             current_app.logger.info('%s - %s' %('words', words))
 
-            deepScore = deepPrediction(words)
+            deepScore = loadModel.deepPrediction(words)
             bayScore = bf.predict(words)
 
             # compare deeplearning and bayesian
@@ -128,7 +125,7 @@ def kakao():
                     return '', 204
                 response['template']['outputs'] = text
             else:
-                current_app.logger.info('%s - %s' % ('deep predcition', str(deepScore)))
+                current_app.logger.info('%s - %s' %('deep predcition', str(deepScore)))
                 current_app.logger.info('%s - %s' %('bayesian', bayScore))
                 intent = deepScore[0][0]
                 if bf.category_dict[intent] > 5:
@@ -163,26 +160,6 @@ def kakao():
         else:
             current_app.logger.info('%s - %s' %('response', response['template']))
         return jsonify(response)
-
-def deepPrediction(words):
-    sentence = []
-    for word in words:
-        sentence.append(word_index[word])
-    x = pad_sequences([sentence], maxlen=max_len)
-
-    # https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/sequence/pad_sequences
-    # tf.keras.preprocessing.sequence.pad_sequences(sequence, maxlen=2)
-    # array([[0, 1], [2, 3], [5, 6]])
-
-    y = model.predict(x)
-    y = tf.nn.softmax(y).numpy().tolist()[0]
-
-    score_list = []
-    for idx in idx_label:
-        score_list.append((idx_label[str(idx)], y[int(idx)]))
-    score_list = sorted(score_list, key=lambda i: i[1])
-    score_list.reverse()
-    return score_list[0:3]
 
 def info(kakaoJson):
     if kakaoJson:

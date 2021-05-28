@@ -161,6 +161,18 @@ def get_nlp_list(page=1, keyword=None):
     paging = paginate(page, per_page, count)
     return paging, data_list
 
+def get_nlp_wrong_list(page=1, keyword=None):
+    per_page = page_default['per_page']
+    offset = (page - 1) * per_page
+    collection = db['wrong_prediction']
+    if keyword is None or keyword == '':
+        data_list = collection.find().limit(per_page).skip(offset)
+    else:
+        data_list = collection.find({'words':{'$regex':keyword}}).limit(per_page).skip(offset)
+    count = data_list.count()
+    paging = paginate(page, per_page, count)
+    return paging, data_list
+
 def get_monitoring_data_list(page=1, sort=None, keyword=None):
     if sort is None or sort == '':
         sort = [('timestamp', -1)]
@@ -464,5 +476,19 @@ def post_deepmodel(word_index, idx_label, max_len_list):
         collection.update_one({'type':'idx_label', 'idx':word}, {'$set':update}, upsert=True)
     update = {'max_len_list':max_len_list}
     collection.update_one({'max_len_list':{'$exists':'true'}}, {'$set':update}, upsert=True)
+
+def get_nlp_msg():
+    collection = db['nlp']
+    data_list = collection.find(sort = [('timestamp', -1)])
+    msg_list = []
+    for data in data_list:
+        msg_list.append((data['msg'], data['intent']))
+    return msg_list
+
+def post_nlp_wrong(wrong_nlp_list):
+    db.drop_collection('wrong_prediction')
+    collection = db['wrong_prediction']
+    for update in wrong_nlp_list:
+        collection.update_one(update, {'$set':update}, upsert=True)
 
 

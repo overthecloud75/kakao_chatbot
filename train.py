@@ -6,10 +6,11 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.utils import to_categorical
 import tensorflow as tf
+from predictions.pipeline import LoadModel
 from predictions.deep_model import IntentModel
 from predictions.bayesianFilter import BayesianFilter
 from predictions.preProcess import PreProcess
-from models import get_post_nlp, post_prewordCount, post_bayesian, post_deepmodel
+from models import get_post_nlp, get_nlp_msg, post_prewordCount, post_bayesian, post_deepmodel, post_nlp_wrong
 
 def paraSaveAndTest(filter=None, preProcessing=None):
 
@@ -20,6 +21,17 @@ def paraSaveAndTest(filter=None, preProcessing=None):
     word_difference = post_bayesian(filter=filter)
     post_prewordCount(preProcessing=preProcessing)
     return intent_total_count, intent_train, label_train, label_idx, idx_label, word_difference, nlp_time
+
+def test_prediction(preProcessing=None):
+    loadModel = LoadModel()
+    msg_list = get_nlp_msg()
+    wrong_nlp_list = []
+    for msg, intent in msg_list:
+        spacetext, corpus, words = preProcessing.split(msg)
+        deepScore = loadModel.deepPrediction(words)
+        if deepScore[0][0] != intent:
+            wrong_nlp_list.append({'msg':msg, 'spacetext':spacetext, 'corpus':corpus, 'words':words, 'deep':deepScore, 'intent':intent})
+    post_nlp_wrong(wrong_nlp_list)
 
 def predict_bayesian(intent_total_count, intent_train, filter=None):
     pre1 = 0
@@ -90,28 +102,12 @@ if __name__ == '__main__' :
 
     model.save('predictions/intent.h5')
     model = tf.keras.models.load_model('predictions/intent.h5')
-    len_intent = intent_train.shape[0]
 
-    k = 0
-    deepsocorelist = []
-    for i in range(len_intent):
-        x = np.expand_dims(intent_train[i], axis=0)
-        try:
-            y = model(x)
-            ax = np.argmax(y)
-            ay = np.argmax(label_train[i])
-            if ax == ay:
-                k = k + 1
-        except Exception as e:
-            print(e)
-            print(x, vocab_size)
-            for i in x[0]:
-                if i != 0 :
-                    print(index_word[i])
-
-    print('precison: %s' %(str(k/len_intent)))
     max_len_list = [max_len]
     post_deepmodel(word_index, idx_label, max_len_list)
+
+    test_prediction(preProcessing=preProcessing)
+    
     print(word_index)
     print('-----------------------')
     print('word_difference')

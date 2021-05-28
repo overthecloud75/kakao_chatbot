@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-3">
+
+    {% include 'search.html' %}
+
+<table class="table">
+    {% if data_list %}
+        <thead>
+        <tr class="thead-dark">
+            <th>번호</th>
+            <th>message</th>
+            <th>뛰어쓰기</th>
+            <th>corpus</th>
+            <th>words</th>
+            <th>intent</th>
+            <th>deepscore</th>
+        </tr>
+        </thead>
+        {% for intent in data_list %}
+        <tr>
+            <td>{{ paging.count - paging.offset - loop.index0 }}</td>
+            <td>{{ intent.msg }}</td>
+            <td>{{ intent.spacetext }}</td>
+            <td>{{ intent.corpus }}</td>
+            <td>{{ intent.words }}</td>
+            <td>{{ intent.intent }}</td>
+            <td>{{ intent.deep[0][0] }} / {{ intent.deep[1][0] }} / {{ intent.deep[2][0]  }}</td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="3">훈련 data가 없습니다.</td>
+        </tr>
+{% endif %}
+</table>
+</div>
+
+{% include 'paging.html' %}
+{% endblock %}

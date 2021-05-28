@@ -1,7 +1,7 @@
 from flask import Blueprint, request, render_template, url_for, g, flash
 from werkzeug.utils import redirect
 from form import MonitoringForm
-from models import get_category_list, get_monitoring_data_list, post_monitoring, get_nlp_list, get_accuracy_list, get_statistics_list
+from models import get_category_list, get_monitoring_data_list, post_monitoring, get_nlp_list, get_nlp_wrong_list, get_accuracy_list, get_statistics_list
 from utils import request_get
 import functools
 
@@ -37,6 +37,12 @@ def nlp():
     page, keyword, so, so_list = request_get(request.args)
     paging, data_list = get_nlp_list(page=page, keyword=keyword)
     return render_template('monitoring/nlp.html', **locals())
+
+@bp.route('/wrong_prediction/')
+def wrong_prediction():
+    page, keyword, so, so_list = request_get(request.args)
+    paging, data_list = get_nlp_wrong_list(page=page, keyword=keyword)
+    return render_template('monitoring/wrong_prediction.html', **locals())
 
 @bp.route('/accuracy/')
 @login_required

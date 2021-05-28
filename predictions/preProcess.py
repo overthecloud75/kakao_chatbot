@@ -1,5 +1,5 @@
 from konlpy.tag import Okt
-from pykospacing.kospacing import PredSpacing
+# from pykospacing.kospacing import PredSpacing
 # from chatspace import ChatSpace
 from hanspell import spell_checker
 
@@ -55,7 +55,7 @@ def openText():
 class PreProcess:
     def __init__(self, train=False):
         # self.spacer = ChatSpace()
-        self.spacer = PredSpacing()
+        # self.spacer = PredSpacing()
         self.train = train
 
         self.typo, self.typo_count, self.synonym, self.synonym_count, self.stopwords, self.stopwords_count, \
@@ -75,13 +75,14 @@ class PreProcess:
         try:
             result = spell_checker.check(u'%s' %text)
         except Exception as e:
-            print(e)
+            print('spell_check', e)
             print(text)
         else:
             result = result.as_dict()
             text = result['checked']
             if result['errors'] > 0:
-                print(result)
+                pass
+                # print(result)
         text = self.typo_correction(text) # 오타 수정
         # text = self.spacer.spacing(text) # 뛰어 쓰기
         text = self.split_correction(text) # 뛰어 쓰기 추가
