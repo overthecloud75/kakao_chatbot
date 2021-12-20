@@ -8,5 +8,10 @@ raw_image/
 views/__pycache__
 views/category_config.py
 predictions/intent.h5
+Lib/
+Include/
+Scripts/
+share/
+pyvenv.cfg
 kakao_chatbot.pptx
 request_test.py
