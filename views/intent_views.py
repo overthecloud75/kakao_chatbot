@@ -14,8 +14,8 @@ def _list():
         intent = form.intent.data
         request_data = {'intent':intent}
         post_intent(request_data)
-    paging, data_list = get_intent_paging(page=page, sort=so_list, keyword=keyword)
-    data_len = data_list.count()
+    paging, data_list, data_len = get_intent_paging(page=page, sort=so_list, keyword=keyword)
+    # data_len = data_list.count()
     return render_template('intent/intent_list.html', **locals())
 
 @bp.route('/<intent>/', methods=('GET', 'POST'))

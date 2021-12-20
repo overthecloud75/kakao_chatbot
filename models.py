@@ -99,12 +99,13 @@ def get_intent_paging(page=1, sort=None, keyword=None):
     collection = db['bayesian']
     if keyword is None or keyword == '':
         data_list = collection.find({'type':'intent'}, sort=sort)
+        count = collection.count_documents({'type':'intent'})
     else:
         data_list = collection.find({'type':'intent', 'intent':{'$regex':keyword}}, sort=sort)
-    count = data_list.count()
+        count = collection.count_documents({'type':'intent', 'intent':{'$regex':keyword}})
     data_list = data_list.limit(per_page).skip(offset)
     paging = paginate(page, per_page, count)
-    return paging, data_list
+    return paging, data_list, count
 
 def get_intent_data_list(intent, page=1, keyword=None):
     per_page = page_default['per_page']
@@ -112,9 +113,10 @@ def get_intent_data_list(intent, page=1, keyword=None):
     collection = db['intent']
     if  keyword is None or keyword == '':
         data_list = collection.find({'intent':intent})
+        count = collection.count_documents({'intent':intent})
     else:
         data_list = collection.find({'intent':intent, 'msg':{'$regex':keyword}})
-    count = data_list.count()
+        count = collection.count_documents({'intent':intent, 'msg':{'$regex':keyword}})
     data_list = data_list.limit(per_page).skip(offset)
     paging = paginate(page, per_page, count)
     return paging, data_list
@@ -131,7 +133,7 @@ def post_intent(request_data):
                 update = copy.deepcopy(request_data)
                 update['timestamp'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 collection.update_one({'msg':update['msg']},{'$set':update}, upsert=True)
-                count = collection.find({'intent':intent}).count()
+                count = collection.count_documents({'intent':intent})
                 collection = db['bayesian']
                 update = {'count':count}
                 collection.update_one({'type':'intent', 'intent':intent}, {'$set':update}, upsert=True)
@@ -155,9 +157,10 @@ def get_nlp_list(page=1, keyword=None):
     collection = db['nlp']
     if keyword is None or keyword == '':
         data_list = collection.find(sort = [('timestamp', -1)]).limit(per_page).skip(offset)
+        count = collection.count_documents({}, limit=per_page, skip=offset)
     else:
         data_list = collection.find({'words':{'$regex':keyword}}, sort = [('timestamp', -1)]).limit(per_page).skip(offset)
-    count = data_list.count()
+        count = collection.count_documents({'words':{'$regex':keyword}}, limit=per_page, skip=offset)
     paging = paginate(page, per_page, count)
     return paging, data_list
 
@@ -167,9 +170,10 @@ def get_nlp_wrong_list(page=1, keyword=None):
     collection = db['wrong_prediction']
     if keyword is None or keyword == '':
         data_list = collection.find().limit(per_page).skip(offset)
+        count = collection.count_documents({}, limit=per_page, skip=offset)
     else:
         data_list = collection.find({'words':{'$regex':keyword}}).limit(per_page).skip(offset)
-    count = data_list.count()
+        count = collection.count_documents({'words':{'$regex':keyword}}, limit=per_page, skip=offset)
     paging = paginate(page, per_page, count)
     return paging, data_list
 
@@ -181,9 +185,12 @@ def get_monitoring_data_list(page=1, sort=None, keyword=None):
     collection = db['kakao']
     if keyword is None or keyword == '':
         data_list = collection.find(sort=sort).limit(per_page).skip(offset)
+        count = collection.count_documents({}, limit=per_page, skip=offset)
     else:
         data_list = collection.find({'msg':{'$regex':keyword}}, sort=sort).limit(per_page).skip(offset)
-    count = data_list.count()
+        count = collection.count_documents({'msg':{'$regex':keyword}}, limit=per_page, skip=offset)
+        # https://stackoverflow.com/questions/4415514/in-mongodbs-pymongo-how-do-i-do-a-count
+
     paging = paginate(page, per_page, count)
     return paging, data_list
 
@@ -208,7 +215,7 @@ def get_accuracy_list(page=1, sort=None):
         collection = db['kakao']
         str_today = str(today)
         today_find = collection.find({'timestamp':{'$regex':str_today}})
-        count = today_find.count()
+        count = collection.count_documents({'timestamp':{'$regex':str_today}})
         if count:
             count, unknown, no_decision, deep_accuracy, bay_accuracy = calculate_accuracy(count, today_find)
             data = {'date':str_today, 'count':count, 'unknown':unknown, 'no_decision':no_decision, 'deep_accuracy':deep_accuracy, 'bay_accuracy':bay_accuracy}
@@ -224,7 +231,7 @@ def get_accuracy_list(page=1, sort=None):
             today = today - datetime.timedelta(days=2)
         days = days + 1
     collection = db['statistics']
-    count = collection.count()
+    count = collection.count_documents({})
     data_list = collection.find(sort=sort).limit(per_page).skip(offset)
     paging = paginate(page, per_page, count)
     return paging, data_list
@@ -245,9 +252,10 @@ def get_word_list(page=1, sort=None, keyword=None):
     collection = db['bayesian']
     if keyword is None or keyword == '':
         data_list = collection.find({'type':'word_count'}, sort=sort).limit(per_page).skip(offset)
+        count = collection.count_documents({'type': 'word_count'}, limit=per_page, skip=offset)
     else:
         data_list = collection.find({'type':'word_count', 'word':{'$regex':keyword}}, sort=sort).limit(per_page).skip(offset)
-    count = data_list.count()
+        count = collection.count_documents({'type':'word_count', 'word':{'$regex':keyword}}, limit=per_page, skip=offset)
     paging = paginate(page, per_page, count)
     return paging, data_list
 
