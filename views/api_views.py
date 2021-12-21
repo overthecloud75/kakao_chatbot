@@ -115,8 +115,8 @@ def kakao():
             # compare deeplearning and bayesian
             try:
                 kakaoWrite(message['msg'], spacetext, corpus, words, deepScore, bayScore)
-            except:
-                pass
+            except Exception as e:
+                print(e)
 
             intent = conditionalCheckIntent(words)
             if intent:

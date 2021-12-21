@@ -23,7 +23,7 @@ def post_sign_up(request_data):
             user_id = 1
         request_data['create_time'] = str(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         request_data['user_id'] = user_id
-        collection.insert(request_data)
+        collection.insert_one(request_data)
     return error
 
 def post_login(request_data):
@@ -88,7 +88,7 @@ def kakaoWrite(msg, spacetext, corpus, words, deepScore, bayScore):
                'bay': bayScore,
                }
     collection = db['kakao']
-    collection.insert(data)
+    collection.insert_one(data)
 
 # intent_view.py
 def get_intent_paging(page=1, sort=None, keyword=None):
@@ -157,10 +157,10 @@ def get_nlp_list(page=1, keyword=None):
     collection = db['nlp']
     if keyword is None or keyword == '':
         data_list = collection.find(sort = [('timestamp', -1)]).limit(per_page).skip(offset)
-        count = collection.count_documents({}, limit=per_page, skip=offset)
+        count = collection.count_documents({})
     else:
         data_list = collection.find({'words':{'$regex':keyword}}, sort = [('timestamp', -1)]).limit(per_page).skip(offset)
-        count = collection.count_documents({'words':{'$regex':keyword}}, limit=per_page, skip=offset)
+        count = collection.count_documents({'words':{'$regex':keyword}})
     paging = paginate(page, per_page, count)
     return paging, data_list
 
@@ -170,10 +170,10 @@ def get_nlp_wrong_list(page=1, keyword=None):
     collection = db['wrong_prediction']
     if keyword is None or keyword == '':
         data_list = collection.find().limit(per_page).skip(offset)
-        count = collection.count_documents({}, limit=per_page, skip=offset)
+        count = collection.count_documents({})
     else:
         data_list = collection.find({'words':{'$regex':keyword}}).limit(per_page).skip(offset)
-        count = collection.count_documents({'words':{'$regex':keyword}}, limit=per_page, skip=offset)
+        count = collection.count_documents({'words':{'$regex':keyword}})
     paging = paginate(page, per_page, count)
     return paging, data_list
 
@@ -185,10 +185,10 @@ def get_monitoring_data_list(page=1, sort=None, keyword=None):
     collection = db['kakao']
     if keyword is None or keyword == '':
         data_list = collection.find(sort=sort).limit(per_page).skip(offset)
-        count = collection.count_documents({}, limit=per_page, skip=offset)
+        count = collection.count_documents({})
     else:
         data_list = collection.find({'msg':{'$regex':keyword}}, sort=sort).limit(per_page).skip(offset)
-        count = collection.count_documents({'msg':{'$regex':keyword}}, limit=per_page, skip=offset)
+        count = collection.count_documents({'msg':{'$regex':keyword}})
         # https://stackoverflow.com/questions/4415514/in-mongodbs-pymongo-how-do-i-do-a-count
 
     paging = paginate(page, per_page, count)
@@ -252,10 +252,10 @@ def get_word_list(page=1, sort=None, keyword=None):
     collection = db['bayesian']
     if keyword is None or keyword == '':
         data_list = collection.find({'type':'word_count'}, sort=sort).limit(per_page).skip(offset)
-        count = collection.count_documents({'type': 'word_count'}, limit=per_page, skip=offset)
+        count = collection.count_documents({'type': 'word_count'})
     else:
         data_list = collection.find({'type':'word_count', 'word':{'$regex':keyword}}, sort=sort).limit(per_page).skip(offset)
-        count = collection.count_documents({'type':'word_count', 'word':{'$regex':keyword}}, limit=per_page, skip=offset)
+        count = collection.count_documents({'type':'word_count', 'word':{'$regex':keyword}})
     paging = paginate(page, per_page, count)
     return paging, data_list
 
